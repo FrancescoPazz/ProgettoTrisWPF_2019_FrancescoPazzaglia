@@ -34,32 +34,25 @@
             <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
         <!--Menù-->
-        <Button x:Name="btnModalita1" Style="{DynamicResource ResourceKey=btnSceltaModalità}" Grid.Column="0" Grid.Row="1" Height="50" Width="200" Content="Utente vs Utente" FontSize="24" FontWeight="Bold" Click="btnModalita1_Click" MouseEnter="btnModalita1_MouseEnter" MouseLeave="btnModalita_MouseLeave"/>
-        <Button x:Name="btnModalita2" Style="{DynamicResource ResourceKey=btnSceltaModalità}" Grid.Column="1" Grid.Row="1" Height="50" Width="200" Content="Utente vs CPU" FontSize="25" FontWeight="Bold" Click="btnModalita2_Click" MouseEnter="btnModalita2_MouseEnter" MouseLeave="btnModalita_MouseLeave"/>
-        <Button x:Name="btnModalita3" Style="{DynamicResource ResourceKey=btnSceltaModalità}" Grid.Column="2" Grid.Row="1" Height="50" Width="200" Content="CPU vs CPU" FontSize="25" FontWeight="Bold" Click="btnModalita3_Click" MouseEnter="btnModalita3_MouseEnter" MouseLeave="btnModalita_MouseLeave"/>
+        <Button x:Name="btnModalita1" Style="{DynamicResource ResourceKey=btnSceltaModalità}" Grid.Column="1" Grid.Row="1" Height="50" Width="200" Content="Utente vs Utente Online" FontSize="17" FontWeight="Bold" Click="btnModalita1_Click"/>
         <TextBlock x:Name="tbkTestoModalita" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" FontSize="30" Margin="20" TextWrapping="Wrap"/>
         <TextBlock x:Name="tbkTitolo" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="100" Text="TRIS"/>
-        <TextBlock x:Name="tbkSceltaMod" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="40" Text="Scegliere la modalità per iniziare a giocare :)"/>
+        <TextBlock x:Name="tbkSceltaMod" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="40" Text="Gioca a Tris con un amico in locale :)"/>
         <TextBlock x:Name="tbkSceltaColoreGriglia" Grid.ColumnSpan="2" Text="Se vuoi puoi cambiare colore alla griglia di gioco" FontSize="17" FontStyle="Italic"/>
         <ComboBox x:Name="cmbSceltaColoreGriglia" Height="30" Width="125" SelectedItem="Default" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30" FontWeight="Bold" BorderBrush="Black" BorderThickness="2" FontSize="20" SelectionChanged="cmbSceltaColoreGriglia_SelectionChanged"/>
         <!--Modalità 1-->
         <Button x:Name="btnOKMod1" Style="{DynamicResource ResourceKey=btnSceltaModalità}" Grid.Column="1" Grid.Row="1" Height="50" Width="75" Content="OK" FontSize="25" FontWeight="Bold" Visibility="Hidden" IsEnabled="False" Click="btnOKMod1_Click"/>
-        <TextBlock x:Name="tbkRichiestaNickname" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="40" Text="Prima di poter iniziare a giocare, scegli i nomi dei due giocatori oppure mantenere quelli predefiniti" TextWrapping="Wrap" Visibility="Hidden"/>
+        <TextBlock x:Name="tbkRichiestaNickname" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="30" Text="Prima di poter iniziare a giocare, inserire l'indirizzo IP e la porta dell'avversario" TextWrapping="Wrap" Visibility="Hidden"/>
         <TextBox x:Name="txtInserimentoUtente1" Text="Utente1" Grid.Row="1" Grid.Column="0" Width="225" Height="50" Visibility="Hidden" TextChanged="txtInserimentoUtente1_TextChanged" FontSize="32"/>
         <TextBox x:Name="txtInserimentoUtente2" Text="Utente2" Grid.Row="1" Grid.Column="2" Width="225" Height="50" Visibility="Hidden" TextChanged="txtInserimentoUtente2_TextChanged" FontSize="32"/>
+        <TextBox x:Name="txtInserimentoIP" Text="Inserire IP dell'altro giocatore" Grid.Row="0" Grid.Column="0" Visibility="Hidden" Width="225" Height="50" FontSize="17" TextWrapping="Wrap" GotFocus="txtInserimentoIP_GotFocus" TextChanged="txtInserimentoIPePorta_TextChanged"></TextBox>
+        <TextBox x:Name="txtInserimentoPorta" Text="Inserire la porta dell'altro giocatore" Visibility="Hidden" Grid.Row="0" Grid.Column="1" Width="225" Height="50" FontSize="17" TextWrapping="Wrap" GotFocus="txtInserimentoPorta_GotFocus" TextChanged="txtInserimentoIPePorta_TextChanged"></TextBox>
+        <Button x:Name="btnCreaSocket" Content="Crea Socket" Grid.Row="0" Grid.Column="2" Visibility="Hidden" IsEnabled="False" Style="{DynamicResource ResourceKey=btnSceltaModalità}" Height="50" Width="75" Click="btnCreaSocket_Click"></Button>
         <TextBlock x:Name="txtSceltaSegnoX" Width="50" Height="90" Text="X" FontWeight="Bold" Foreground="Red" FontSize="65" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Hidden"/>
         <TextBlock x:Name="txtSceltaSegnoO" Width="50" Height="90" Text="O" FontWeight="Bold" Foreground="Blue" FontSize="65" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Hidden"/>
         <TextBlock x:Name="txtPartenza" Grid.Column="1" Grid.Row="2" FontSize="25" Text="Scegliere chi inizia, se non scegliete verrà fatto in modo random" VerticalAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" Visibility="Hidden"/>
         <RadioButton x:Name="rtbnSceltaPartenzaUtente1" Grid.Row="2" Grid.Column="0" BorderThickness="5" BorderBrush="Black" VerticalAlignment="Center" HorizontalAlignment="Right" Visibility="Hidden" Margin="0,0,92,20" IsChecked="False"/>
         <RadioButton x:Name="rtbnSceltaPartenzaUtente2" Grid.Row="2" Grid.Column="2" BorderThickness="5" BorderBrush="Black" VerticalAlignment="Center" HorizontalAlignment="Left" Visibility="Hidden" Margin="72,0,0,20" IsChecked="False" RenderTransformOrigin="0.634,0.989"/>
-        <!--Modalità 2-->
-        <TextBlock x:Name="tbkRichiestaSegnoMod2" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="40" Text="Prima di poter iniziare a giocare, scegli il segno da utilizzare" TextWrapping="Wrap" Visibility="Hidden"/>
-        <RadioButton x:Name="rtbnSceltaXMod2" Grid.Row="1" Grid.Column="0" BorderThickness="5" BorderBrush="Black" VerticalAlignment="Center" HorizontalAlignment="Right" Visibility="Hidden" Margin="10" IsChecked="False" Checked="rtbnSceltaXMod2_Checked"/>
-        <RadioButton x:Name="rtbnSceltaOMod2" Grid.Row="1" Grid.Column="2" BorderThickness="5" BorderBrush="Black" VerticalAlignment="Center" HorizontalAlignment="Left" Visibility="Hidden" Margin="10" IsChecked="False" Checked="rtbnSceltaOMod2_Checked"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
-            <RadioButton x:Name="rtbnSceltaPartenzaUtenteMod2" Content="Utente" FontSize="20" FontWeight="Black" BorderThickness="5" BorderBrush="Black" VerticalAlignment="Center" HorizontalAlignment="Right" Visibility="Hidden" Margin="150,0,325,0" IsChecked="False"/>
-            <RadioButton x:Name="rtbnSceltaPartenzaCPUMod2" Content="CPU" FontSize="20" FontWeight="Black" BorderThickness="5" BorderBrush="Black" VerticalAlignment="Center" HorizontalAlignment="Left" Visibility="Hidden" IsChecked="False"/>
-        </StackPanel>
         <!--Griglia-->
         <Button x:Name="btn1mat" Grid.Column="0" Grid.Row="0" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
         <Button x:Name="btn2mat" Grid.Column="1" Grid.Row="0" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>

@@ -13,7 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Threading;
-
+using System.Net.Sockets;
+using System.Net;
 
 namespace Progetto_TRIS_WPF
 {
@@ -25,15 +26,12 @@ namespace Progetto_TRIS_WPF
         //
         //VARIABILI
         //
-        static int modalita;
         string utente1, utente2;
         bool ok1, ok2;
         Button[] bottoniGriglia = new Button[9];
         static int cont = -1;
         int turno = 0;
         Random rnd = new Random();
-        string segnoUtenteMod2;
-        int numeroSceltoBot;
         string[] coloriGriglia = { "Default", "Giallo", "Verde", "Arancione", "Rosa" };
         public MainWindow()
         {
@@ -51,69 +49,27 @@ namespace Progetto_TRIS_WPF
         //
         private void btnModalita1_Click(object sender, RoutedEventArgs e)
         {
-            modalita = 1;
             ScomparsaMenu();
             RendiVisibileMod1();
             btnIndietro.Visibility = Visibility.Visible;
             btnIndietro.IsEnabled = true;
-        }
-        private void btnModalita2_Click(object sender, RoutedEventArgs e)
-        {
-            modalita = 2;
-            ScomparsaMenu();
-            btnIndietro.Visibility = Visibility.Visible;
-            btnIndietro.IsEnabled = true;
-            RendiVisibileMod2();
-        }
-
-        private void btnModalita3_Click(object sender, RoutedEventArgs e)
-        {
-            modalita = 3;
-            ScomparsaMenu();
-            btnIndietro.Visibility = Visibility.Visible;
-            btnReset.IsEnabled = false;
-            btnIndietro.IsEnabled = true;
-            RendiVisibileMod1();
         }
         //
-        //CONTROLLO MODALITA(non so perchè ho provato a fare il controllo con un metodo static void ma non funzionava)
+        //CONTROLLO MODALITA
         //
         private void txtInserimentoUtente1_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (modalita == 1)
-            {
-                if (!string.IsNullOrWhiteSpace(txtInserimentoUtente1.Text))
-                    ok1 = true;
-                else
-                    ok1 = false;
-                if (ok1 && ok2)
-                    btnOKMod1.IsEnabled = true;
-                else
-                    btnOKMod1.IsEnabled = false;
-            }
+            if (!string.IsNullOrWhiteSpace(txtInserimentoUtente1.Text))
+                ok1 = true;
+            else
+                ok1 = false;
         }
         private void txtInserimentoUtente2_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (modalita == 1)
-            {
-                if (!string.IsNullOrWhiteSpace(txtInserimentoUtente2.Text))
-                    ok2 = true;
-                else
-                    ok2 = false;
-                if (ok1 && ok2)
-                    btnOKMod1.IsEnabled = true;
-                else
-                    btnOKMod1.IsEnabled = false;
-            }
-        }
-        private void rtbnSceltaXMod2_Checked(object sender, RoutedEventArgs e)
-        {
-            btnOKMod1.IsEnabled = true;
-        }
-
-        private void rtbnSceltaOMod2_Checked(object sender, RoutedEventArgs e)
-        {
-            btnOKMod1.IsEnabled = true;
+            if (!string.IsNullOrWhiteSpace(txtInserimentoUtente2.Text))
+                ok2 = true;
+            else
+                ok2 = false;
         }
 
         //
@@ -125,184 +81,142 @@ namespace Progetto_TRIS_WPF
         private void btnGriglia_Click(object sender, RoutedEventArgs e)
         {
             txtTurni.Text = "";
-            switch (modalita)
+            string ipAddress = txtInserimentoIP.Text;
+            int port = int.Parse(txtInserimentoPorta.Text);
+            switch (((Button)sender).Name.Substring(3, 1))
             {
-                //
-                //SCELTA MODALITA'
-                //
-                case 1:
+                case "1":
                     {
-                        //
-                        //PRIMA MODALITA' BOTTONI
-                        //
-                        switch (((Button)sender).Name.Substring(3, 1))
-                        {
-                            case "1":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "2":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "3":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "4":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "5":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "6":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "7":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "8":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                            case "9":
-                                {
-                                    InserimentoSegniConTurni(sender);
-                                    GiocateMod1(sender);
-                                    break;
-                                }
-                        }
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
                         break;
                     }
-                case 2:
+                case "2":
                     {
-                        //
-                        //SECONDA MODALITA' BOTTONI
-                        //
-                        assegnaBottoniGriglia();
-                        switch (((Button)sender).Name.Substring(3, 1))
-                        {
-                            case "1":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "2":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "3":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "4":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "5":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "6":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "7":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "8":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                            case "9":
-                                {
-                                    GiocateMod2(sender);
-                                    break;
-                                }
-                        }
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
+                        break;
+                    }
+                case "3":
+                    {
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
+                        break;
+                    }
+                case "4":
+                    {
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
+                        break;
+                    }
+                case "5":
+                    {
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
+                        break;
+                    }
+                case "6":
+                    {
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
+                        break;
+                    }
+                case "7":
+                    {
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
+                        break;
+                    }
+                case "8":
+                    {
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
+                        break;
+                    }
+                case "9":
+                    {
+                        InserimentoSegniConTurni(sender);
+                        GiocateMod1(sender);
                         break;
                     }
             }
+            assegnaBottoniGriglia();
+            SocketSend(IPAddress.Parse(ipAddress), port, InviaCampoDiGioco());
+        }
+        private void txtInserimentoIP_GotFocus(object sender, RoutedEventArgs e)
+        {
+            txtInserimentoIP.Text = string.Empty;
+            txtInserimentoIP.FontSize = 31;
+        }
+        private void txtInserimentoPorta_GotFocus(object sender, RoutedEventArgs e)
+        {
+            txtInserimentoPorta.Text = string.Empty;
+            txtInserimentoPorta.FontSize = 31;
+        }
+        private void txtInserimentoIPePorta_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if(txtInserimentoIP != null && txtInserimentoPorta != null && btnCreaSocket != null)
+            {
+                string ipAddress = txtInserimentoIP.Text;
+                string port = txtInserimentoPorta.Text;
+                int countDot = 0;
+                for (int i = 0; i < ipAddress.Length; i++)
+                {
+                    if (ipAddress[i] == '.')
+                        countDot++;
+                }
+                if (!string.IsNullOrEmpty(ipAddress) && !string.IsNullOrEmpty(port) && int.TryParse(port, out int n) && countDot == 3)
+                    btnCreaSocket.IsEnabled = true;
+                else
+                    btnCreaSocket.IsEnabled = false;
+            }
+        }
+        private void btnCreaSocket_Click(object sender, RoutedEventArgs e)
+        {
+            string localIP;
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            {
+                socket.Connect("8.8.8.8", 65530);
+                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+                localIP = endPoint.Address.ToString();
+            }
+            IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
+            Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
+            receive.Start(sourceSocket);
+            if (ok1 && ok2)
+                btnOKMod1.IsEnabled = true;
+            else
+                btnOKMod1.IsEnabled = false;
         }
         //
         //BOTTONI FUNZIONALI
         //
         private void btnOKMod1_Click(object sender, RoutedEventArgs e)
         {
-            if (modalita == 1 || modalita == 3)
-            {
-                utente1 = txtInserimentoUtente1.Text;
-                utente2 = txtInserimentoUtente2.Text;
-                turno = SceltaTurno();
-                ScomparsaMod1();
-                RendiVisibileGriglia();
-                if(modalita == 3)
-                {
-                    GiocateMod3();
-                    btnIndietro.IsEnabled = false;
-                }
-            }
-            else if (modalita == 2)
-            {
-                turno = SceltaTurno();
-                ScomparsaMod2();
-                RendiVisibileGriglia();
-                if (rtbnSceltaOMod2.IsChecked == true)
-                    segnoUtenteMod2 = "O";
-                else if (rtbnSceltaXMod2.IsChecked == true)
-                    segnoUtenteMod2 = "X";
-            }
-
+            utente1 = txtInserimentoUtente1.Text;
+            utente2 = txtInserimentoUtente2.Text;
+            turno = SceltaTurno();
+            ScomparsaMod1();
+            RendiVisibileGriglia();
         }
         private void btnIndietro_Click(object sender, RoutedEventArgs e)
         {
             txtInserimentoUtente1.Text = "Utente1";
             txtInserimentoUtente2.Text = "Utente2";
+            txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
+            txtInserimentoIP.FontSize = 17;
+            txtInserimentoPorta.Text = "Inserire la porta dell'altro giocatore";
+            txtInserimentoPorta.FontSize = 17;
             rtbnSceltaPartenzaUtente1.IsChecked = false;
             rtbnSceltaPartenzaUtente2.IsChecked = false;
-            rtbnSceltaXMod2.IsChecked = false;
-            rtbnSceltaOMod2.IsChecked = false;
-            rtbnSceltaPartenzaUtenteMod2.IsChecked = false;
-            rtbnSceltaPartenzaCPUMod2.IsChecked = false;
             ScomparsaGriglia();
             SvuotaGriglia();
             ScomparsaMod1();
-            ScomparsaMod2();
             AbilitaGriglia();
             txtTurni.Text = "";
             RendiVisibileMenu();
             cont = -1;
             pareggio = false;
-            if(modalita==3)
-                btnIndietro.IsEnabled = false;
         }
         private void btnReset_Click(object sender, RoutedEventArgs e)
         {
@@ -310,17 +224,7 @@ namespace Progetto_TRIS_WPF
             AbilitaGriglia();
             cont = -1;
             pareggio = false;
-            if (modalita == 1 || modalita == 2)
-            {
-                turno = SceltaTurno();
-            }
-            else
-            {
-                turno = SceltaTurno();
-                btnReset.IsEnabled = false;
-                btnIndietro.IsEnabled = false;
-                GiocateMod3();
-            }
+            turno = SceltaTurno();
         }
         private void cmbSceltaColoreGriglia_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -353,25 +257,23 @@ namespace Progetto_TRIS_WPF
                     }
             }
         }
-        private void btnModalita1_MouseEnter(object sender, MouseEventArgs e)
-        {
-            tbkTestoModalita.Text = "La prima modalità è quella classica dove ci sono due utenti che si sfidano.";
-        }
-        private void btnModalita2_MouseEnter(object sender, MouseEventArgs e)
-        {
-            tbkTestoModalita.Text = "La seconda modalità è utente contro la CPU che è in grado di prevenire le tue mosse e gestire anche le proprie";
-        }
-        private void btnModalita3_MouseEnter(object sender, MouseEventArgs e)
-        {
-            tbkTestoModalita.Text = "La terza modalità è una modalità spettatore dove si possono vedere le partite di due CPU l'una contro l'altra";
-        }
-        private void btnModalita_MouseLeave(object sender, MouseEventArgs e)
-        {
-            tbkTestoModalita.Text = "Puntare il mouse sopra di un bottone delle tre modalità per scoprire come funzionano!";
-        }
         //
         //METODI DI COMPARSA O SCOMPARSA E GESTIONI
         //
+        private string InviaCampoDiGioco()
+        {
+            string messaggio = string.Empty;
+            for (int i = 0; i < bottoniGriglia.Length; i++)
+            {
+                if(bottoniGriglia[i] != null)
+                    if (bottoniGriglia[i].Content == null)
+                        messaggio += "null,";
+                    else
+                        messaggio += bottoniGriglia[i].Content + ",";
+            }
+            messaggio += turno;
+            return messaggio;
+        }
         private void assegnaBottoniGriglia()
         {
             bottoniGriglia[0] = btn1mat;
@@ -387,30 +289,22 @@ namespace Progetto_TRIS_WPF
         private void ScomparsaMenu()
         {
             btnModalita1.Visibility = Visibility.Hidden;
-            btnModalita2.Visibility = Visibility.Hidden;
-            btnModalita3.Visibility = Visibility.Hidden;
             tbkSceltaMod.Visibility = Visibility.Hidden;
             tbkTitolo.Visibility = Visibility.Hidden;
             tbkSceltaColoreGriglia.Visibility = Visibility.Hidden;
             cmbSceltaColoreGriglia.Visibility = Visibility.Hidden;
             tbkTestoModalita.Visibility = Visibility.Hidden;
             btnModalita1.IsEnabled = false;
-            btnModalita2.IsEnabled = false;
-            btnModalita3.IsEnabled = false;
         }
         private void RendiVisibileMenu()
         {
             btnModalita1.Visibility = Visibility.Visible;
-            btnModalita2.Visibility = Visibility.Visible;
-            btnModalita3.Visibility = Visibility.Visible;
             tbkSceltaMod.Visibility = Visibility.Visible;
             tbkTitolo.Visibility = Visibility.Visible;
             tbkSceltaColoreGriglia.Visibility = Visibility.Visible;
             cmbSceltaColoreGriglia.Visibility = Visibility.Visible;
             tbkTestoModalita.Visibility = Visibility.Visible;
             btnModalita1.IsEnabled = true;
-            btnModalita2.IsEnabled = true;
-            btnModalita3.IsEnabled = true;
         }
         private void RendiVisibileGriglia()
         {
@@ -470,29 +364,21 @@ namespace Progetto_TRIS_WPF
             tbkRichiestaNickname.Visibility = Visibility.Visible;
             btnOKMod1.Visibility = Visibility.Visible;
             txtInserimentoUtente1.Visibility = Visibility.Visible;
+            txtInserimentoIP.Visibility = Visibility.Visible;
+            txtInserimentoPorta.Visibility = Visibility.Visible;
+            btnCreaSocket.Visibility = Visibility.Visible;
             txtInserimentoUtente2.Visibility = Visibility.Visible;
             txtSceltaSegnoO.Visibility = Visibility.Visible;
             txtSceltaSegnoX.Visibility = Visibility.Visible;
             txtPartenza.Visibility = Visibility.Visible;
             rtbnSceltaPartenzaUtente1.Visibility = Visibility.Visible;
             rtbnSceltaPartenzaUtente2.Visibility = Visibility.Visible;
-            btnOKMod1.IsEnabled = true;
-        }
-        private void RendiVisibileMod2()
-        {
-            btnOKMod1.Visibility = Visibility.Visible;
-            txtSceltaSegnoO.Visibility = Visibility.Visible;
-            txtSceltaSegnoX.Visibility = Visibility.Visible;
-            txtPartenza.Visibility = Visibility.Visible;
-            rtbnSceltaPartenzaUtenteMod2.Visibility = Visibility.Visible;
-            rtbnSceltaPartenzaCPUMod2.Visibility = Visibility.Visible;
-            rtbnSceltaXMod2.Visibility = Visibility.Visible;
-            rtbnSceltaOMod2.Visibility = Visibility.Visible;
-            tbkRichiestaSegnoMod2.Visibility = Visibility.Visible;
-            btnOKMod1.IsEnabled = false;
         }
         private void ScomparsaMod1()
         {
+            btnCreaSocket.Visibility = Visibility.Hidden;
+            txtInserimentoIP.Visibility = Visibility.Hidden;
+            txtInserimentoPorta.Visibility = Visibility.Hidden;
             tbkRichiestaNickname.Visibility = Visibility.Hidden;
             btnOKMod1.Visibility = Visibility.Hidden;
             txtInserimentoUtente1.Visibility = Visibility.Hidden;
@@ -502,18 +388,6 @@ namespace Progetto_TRIS_WPF
             txtPartenza.Visibility = Visibility.Hidden;
             rtbnSceltaPartenzaUtente1.Visibility = Visibility.Hidden;
             rtbnSceltaPartenzaUtente2.Visibility = Visibility.Hidden;
-        }
-        private void ScomparsaMod2()
-        {
-            btnOKMod1.Visibility = Visibility.Hidden;
-            txtSceltaSegnoO.Visibility = Visibility.Hidden;
-            txtSceltaSegnoX.Visibility = Visibility.Hidden;
-            txtPartenza.Visibility = Visibility.Hidden;
-            rtbnSceltaPartenzaUtenteMod2.Visibility = Visibility.Hidden;
-            rtbnSceltaPartenzaCPUMod2.Visibility = Visibility.Hidden;
-            rtbnSceltaXMod2.Visibility = Visibility.Hidden;
-            rtbnSceltaOMod2.Visibility = Visibility.Hidden;
-            tbkRichiestaSegnoMod2.Visibility = Visibility.Hidden;
         }
         private void AbilitaGriglia()
         {
@@ -562,97 +436,44 @@ namespace Progetto_TRIS_WPF
         }
         private int SceltaTurno()
         {
-            if (modalita == 1 || modalita == 3)
+            if (rtbnSceltaPartenzaUtente1.IsChecked == false && rtbnSceltaPartenzaUtente2.IsChecked == false)
             {
-                if (rtbnSceltaPartenzaUtente1.IsChecked == false && rtbnSceltaPartenzaUtente2.IsChecked == false)
-                {
-                    turno = rnd.Next(1, 3);
-                    if (turno == 1)
-                        txtTurni.Text = $"{utente1} sei stato sorteggiato per primo";
-                    else if (turno == 2)
-                        txtTurni.Text = $"{utente2} sei stato sorteggiato per primo";
-                }
-                else
-                {
-                    if (rtbnSceltaPartenzaUtente1.IsChecked == true)
-                    {
-                        turno = 1;
-                        txtTurni.Text = $"{utente1} il primo turno è il tuo";
-                    }
-                    else if (rtbnSceltaPartenzaUtente2.IsChecked == true)
-                    {
-                        turno = 2;
-                        txtTurni.Text = $"{utente2} il primo turno è il tuo";
-                    }
-                }
+                turno = rnd.Next(1, 3);
+                if (turno == 1)
+                    txtTurni.Text = $"{utente1} sei stato sorteggiato per primo";
+                else if (turno == 2)
+                    txtTurni.Text = $"{utente2} sei stato sorteggiato per primo";
             }
-            else if (modalita == 2)
+            else
             {
-                assegnaBottoniGriglia();
-                if (rtbnSceltaPartenzaUtenteMod2.IsChecked == false && rtbnSceltaPartenzaCPUMod2.IsChecked == false)
+                if (rtbnSceltaPartenzaUtente1.IsChecked == true)
                 {
-                    turno = rnd.Next(1, 3);
-                    if (turno == 1)
-                        txtTurni.Text = $"Sei stato sorteggiato per primo";
-                    if (turno == 2)
-                    {
-                        numeroSceltoBot = rnd.Next(9);
-                        if (rtbnSceltaXMod2.IsChecked == true)
-                            bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Blue);
-                        else if (rtbnSceltaOMod2.IsChecked == true)
-                            bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Red);
-                        bottoniGriglia[numeroSceltoBot].Content = "CPU";
-                        bottoniGriglia[numeroSceltoBot].IsHitTestVisible = false;
-                        txtTurni.Text = $"La CPU è stata sorteggiata per prima per prima";
-                    }
+                    turno = 1;
+                    txtTurni.Text = $"{utente1} il primo turno è il tuo";
                 }
-                else
+                else if (rtbnSceltaPartenzaUtente2.IsChecked == true)
                 {
-                    if (rtbnSceltaPartenzaUtenteMod2.IsChecked == true)
-                    {
-                        turno = 1;
-                        txtTurni.Text = $"Il primo turno è il tuo!";
-                    }
-                    else if (rtbnSceltaPartenzaCPUMod2.IsChecked == true)
-                    {
-                        numeroSceltoBot = rnd.Next(9);
-                        if (rtbnSceltaXMod2.IsChecked == true)
-                            bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Blue);
-                        else if (rtbnSceltaOMod2.IsChecked == true)
-                            bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Red);
-                        bottoniGriglia[numeroSceltoBot].Content = "CPU";
-                        bottoniGriglia[numeroSceltoBot].IsHitTestVisible = false;
-                        txtTurni.Text = $"Il primo turno è della CPU";
-                    }
+                    turno = 2;
+                    txtTurni.Text = $"{utente2} il primo turno è il tuo";
                 }
             }
             return turno;
-        }
-        private bool ControlloBottoniCPU(int n)
-        {
-            if (bottoniGriglia[n].Content == null)
-                return true;
-            else
-                return false;
         }
         private bool TrovaTris(string segno)
         {
             if (((string)btn1mat.Content == segno && (string)btn2mat.Content == segno && (string)btn3mat.Content == segno) || ((string)btn4mat.Content == segno && (string)btn5mat.Content == segno && (string)btn6mat.Content == segno) || ((string)btn7mat.Content == segno && (string)btn8mat.Content == segno && (string)btn9mat.Content == segno))
             {
-                if (modalita != 2 && modalita != 3)
-                    DisabilitaGriglia();
+                DisabilitaGriglia();
                 return true;
             }
             if (((string)btn1mat.Content == segno && (string)btn4mat.Content == segno && (string)btn7mat.Content == segno) || ((string)btn2mat.Content == segno && (string)btn5mat.Content == segno && (string)btn8mat.Content == segno) || ((string)btn3mat.Content == segno && (string)btn6mat.Content == segno && (string)btn9mat.Content == segno))
             {
-                if (modalita != 2 && modalita != 3)
-                    DisabilitaGriglia();
+                DisabilitaGriglia();
                 return true;
             }
             if (((string)btn1mat.Content == segno && (string)btn5mat.Content == segno && (string)btn9mat.Content == segno) || ((string)btn3mat.Content == segno && (string)btn5mat.Content == segno && (string)btn7mat.Content == segno))
             {
-                if (modalita != 2 && modalita != 3)
-                    DisabilitaGriglia();
+                DisabilitaGriglia();
                 return true;
             }
             return false;
@@ -666,112 +487,6 @@ namespace Progetto_TRIS_WPF
                 pareggio = true;
             }
         }
-        private bool Controllo_e_TrovaTrisCPU(Button[] bottoniGriglia, Random CPURandom)
-        {
-            cont++;
-            if (cont != 4)
-            {
-                if (!TrovaDoppie("CPU") && !TrovaDoppie(segnoUtenteMod2))
-                {
-                    do
-                    {
-                        numeroSceltoBot = CPURandom.Next(9);
-                    } while (!ControlloBottoniCPU(numeroSceltoBot));
-                    if (segnoUtenteMod2 == "X")
-                        bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Blue);
-                    else if (segnoUtenteMod2 == "O")
-                        bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Red);
-                    bottoniGriglia[numeroSceltoBot].Content = "CPU";
-                    bottoniGriglia[numeroSceltoBot].IsHitTestVisible = false;
-                }
-                else
-                {
-                    if (TrovaTris("CPU"))
-                    {
-                        DisabilitaGriglia();
-                        txtTurni.Text = $"LA CPU HA VINTOOO";
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        private bool Controllo_e_TrovaTrisCPUSpettatore(Button[] bottoniGriglia, Random CPURandom, string cpu1, string cpu2)
-        {
-            txtTurni.Text = "";
-            if (!TrovaDoppie(cpu1) && !TrovaDoppie(cpu2))
-            {
-                do
-                {
-                    numeroSceltoBot = CPURandom.Next(9);
-                } while (!ControlloBottoniCPU(numeroSceltoBot));
-                if (cpu1 == "X")
-                    bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Red);
-                else if (cpu1 == "O")
-                    bottoniGriglia[numeroSceltoBot].Foreground = new SolidColorBrush(Colors.Blue);
-                bottoniGriglia[numeroSceltoBot].Content = cpu1;
-                bottoniGriglia[numeroSceltoBot].IsHitTestVisible = false;
-            }
-            else
-            {
-                if (TrovaTris(cpu1))
-                {
-                    if (cpu1 == "X")
-                        txtTurni.Text = $"{txtInserimentoUtente1.Text} HA VINTO";
-                    else
-                        txtTurni.Text = $"{txtInserimentoUtente2.Text} HA VINTO";
-                    DisabilitaGriglia();
-                    return true;
-                }
-            }
-            return false;
-        }
-        private void ModificaBottoneCPU(Button btngriglia)
-        {
-            if (modalita == 2)
-            {
-                if (segnoUtenteMod2 == "X")
-                    btngriglia.Foreground = new SolidColorBrush(Colors.Blue);
-                else if (segnoUtenteMod2 == "O")
-                    btngriglia.Foreground = new SolidColorBrush(Colors.Red);
-                btngriglia.IsHitTestVisible = false;
-                btngriglia.Content = "CPU";
-            }
-            else if(modalita == 3)
-            {
-                if (turno == 1)
-                {
-                    btngriglia.Foreground = new SolidColorBrush(Colors.Red);
-                    btngriglia.Content = "X";
-                }
-                else
-                {
-                    btngriglia.Foreground = new SolidColorBrush(Colors.Blue);
-                    btngriglia.Content = "O";
-                }
-                btngriglia.IsHitTestVisible = false;
-            }
-        }
-        private bool TrovaDoppie(string segno)
-        {
-            for (int i = 0; i < bottoniGriglia.Length; i++)
-            {
-                if (bottoniGriglia[i].IsHitTestVisible == true)
-                {
-                    bottoniGriglia[i].Content = segno;
-                    if (TrovaTris(segno))
-                    {
-                        ModificaBottoneCPU(bottoniGriglia[i]);
-                        return true;
-                    }
-                    else
-                    {
-                        bottoniGriglia[i].Content = null;
-                    }
-                }
-            }
-            return false;
-        }
         private void GiocateMod1(object sender)
         {
             if (TrovaTris((string)((Button)sender).Content))
@@ -784,68 +499,48 @@ namespace Progetto_TRIS_WPF
             else
                 ControlloPareggio();
         }
-        private void GiocateMod2(object sender)
+        public async void SocketReceive(object socketsource)
         {
-            if (segnoUtenteMod2 == "X")
-                ((Button)sender).Foreground = new SolidColorBrush(Colors.Red);
-            else if (segnoUtenteMod2 == "O")
-                ((Button)sender).Foreground = new SolidColorBrush(Colors.Blue);
-            ((Button)sender).Content = segnoUtenteMod2;
-            ((Button)sender).IsHitTestVisible = false;
-            if (TrovaTris((string)((Button)sender).Content))
+            IPEndPoint ipendp = (IPEndPoint)socketsource;
+            Socket t = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            t.Bind(ipendp);
+            Byte[] byteRicevuti = new Byte[256];
+            string messaggio;
+            int nBytes = 0;
+            await Task.Run(() =>
             {
-                DisabilitaGriglia();
-                txtTurni.Text = $"HAI VINTOOO";
-            }
-            else
-            {
-                if (!Controllo_e_TrovaTrisCPU(bottoniGriglia, rnd))
-                    ControlloPareggio();
-            }
+                while (true)
+                {
+                    if (t.Available > 0)
+                    {
+                        messaggio = string.Empty;
+                        nBytes = t.Receive(byteRicevuti, byteRicevuti.Length, 0);
+                        messaggio += Encoding.ASCII.GetString(byteRicevuti, 0, nBytes);
+                        this.Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            AggiornaGriglia(messaggio);
+                        }));
+
+                    }
+                }
+            });
         }
-        private async void GiocateMod3()
-         {
-            assegnaBottoniGriglia();
-            while (!TrovaTris("X")&&!TrovaTris("O")||!pareggio)
+        public void SocketSend(IPAddress destination, int destinationPort, string message)
+        {
+            Byte[] bytesended = Encoding.ASCII.GetBytes(message);
+            Socket s = new Socket(destination.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            IPEndPoint remote_endpoint = new IPEndPoint(destination, destinationPort);
+            s.SendTo(bytesended, remote_endpoint);
+        }
+        public void AggiornaGriglia(string messaggio)
+        {
+            string[] griglia = messaggio.Split(',');
+            for (int i = 0; i < bottoniGriglia.Length; i++)
             {
-                ControlloPareggio();
-                if (turno == 1)
-                {
-                    if (pareggio == true)
-                    {
-                        btnReset.IsEnabled = true;
-                        btnIndietro.IsEnabled = true;
-                        break;
-                    }
-                    await Task.Delay(1000);
-                    Controllo_e_TrovaTrisCPUSpettatore(bottoniGriglia, rnd, "X", "O");
-                    if (TrovaTris("X"))
-                    {
-                        btnReset.IsEnabled = true;
-                        btnIndietro.IsEnabled = true;
-                        break;
-                    }
-                    turno = 2;
-                }
-                else
-                {
-                    if (pareggio == true)
-                    {
-                        btnReset.IsEnabled = true;
-                        btnIndietro.IsEnabled = true;
-                        break;
-                    }
-                    await Task.Delay(1000);
-                    Controllo_e_TrovaTrisCPUSpettatore(bottoniGriglia, rnd, "O", "X");
-                    if (TrovaTris("O"))
-                    {
-                        btnReset.IsEnabled = true;
-                        btnIndietro.IsEnabled = true;
-                        break;
-                    }
-                    turno = 1;
-                }
+                if (griglia[i] != "null" || int.TryParse(griglia[i], out int n))
+                    bottoniGriglia[i].Content = griglia[i];
             }
+            turno = int.Parse(griglia[griglia.Length - 1]);
         }
     }
 }
