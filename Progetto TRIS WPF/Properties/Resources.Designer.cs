@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Esercizio_finale_WPF_F.P.Properties
+namespace Progetto_TRIS_WPF.Properties
 {
 
 
@@ -44,7 +44,7 @@ namespace Esercizio_finale_WPF_F.P.Properties
             {
                 if ((resourceMan == null))
                 {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Esercizio_finale_WPF_F.P.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Progetto_TRIS_WPF.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

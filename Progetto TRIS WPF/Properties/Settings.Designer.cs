@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Esercizio_finale_WPF_F.P.Properties
+namespace Progetto_TRIS_WPF.Properties
 {
 
 
