@@ -1,7 +1,7 @@
-﻿<Application x:Class="Esercizio_finale_WPF_F.P.App"
+﻿<Application x:Class="Progetto_TRIS_WPF.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Esercizio_finale_WPF_F.P"
+             xmlns:local="clr-namespace:Progetto_TRIS_WPF"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          
