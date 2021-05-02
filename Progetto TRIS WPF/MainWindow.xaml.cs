@@ -26,15 +26,14 @@ namespace Progetto_TRIS_WPF
         //
         //VARIABILI
         //
-        string utente1, utente2;
-        bool ok1;
         Button[] bottoniGriglia = new Button[9];
-        static int cont = -1;
         bool pareggio = false;
         int turno = 0;
         string segno = string.Empty;
         Random rnd = new Random();
         string[] coloriGriglia = { "Default", "Giallo", "Verde", "Arancione", "Rosa" };
+        Socket connessione;
+        bool connesso = false;
         public MainWindow()
         {
             InitializeComponent();
@@ -55,23 +54,6 @@ namespace Progetto_TRIS_WPF
             btnIndietro.Visibility = Visibility.Visible;
             btnIndietro.IsEnabled = true;
         }
-        //
-        //CONTROLLO MODALITA
-        //
-        private void txtInserimentoUtente1_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(txtInserimentoUtente1.Text))
-                ok1 = true;
-            else
-                ok1 = false;
-        }
-
-        //
-        //FINE CONTROLLO MODALITA
-        //
-        //
-        //EVENTI
-        //
         private void btnGriglia_Click(object sender, RoutedEventArgs e)
         {
             txtTurni.Text = "";
@@ -185,12 +167,7 @@ namespace Progetto_TRIS_WPF
             IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
             Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
             receive.Start(sourceSocket);
-            if (ok1)
-                btnOKMod1.IsEnabled = true;
-            else
-                btnOKMod1.IsEnabled = false;
-            utente1 = txtInserimentoUtente1.Text;
-            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), utente1);
+            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "Richiesta connessione");
             if (turno == 0)
             {
                 turno = SceltaTurno();
@@ -198,6 +175,11 @@ namespace Progetto_TRIS_WPF
                 segno = SceltaSegno();
                 SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), segno.ToString());
             }
+            if (connesso)
+                btnOKMod1.IsEnabled = true;
+            else
+                btnOKMod1.IsEnabled = false;
+            btnCreaSocket.IsEnabled = false;
         }
         //
         //BOTTONI FUNZIONALI
@@ -219,7 +201,6 @@ namespace Progetto_TRIS_WPF
         }
         private void btnIndietro_Click(object sender, RoutedEventArgs e)
         {
-            txtInserimentoUtente1.Text = string.Empty;
             txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
             txtInserimentoIP.FontSize = 17;
             txtInserimentoPorta.Text = "Inserire la porta dell'altro giocatore";
@@ -230,7 +211,6 @@ namespace Progetto_TRIS_WPF
             AbilitaGriglia();
             txtTurni.Text = "";
             RendiVisibileMenu();
-            cont = -1;
             pareggio = false;
             SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), InviaCampoDiGioco());
         }
@@ -238,7 +218,6 @@ namespace Progetto_TRIS_WPF
         {
             SvuotaGriglia();
             AbilitaGriglia();
-            cont = -1;
             pareggio = false;
             SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), InviaCampoDiGioco());
         }
@@ -379,7 +358,6 @@ namespace Progetto_TRIS_WPF
         {
             tbkRichiestaNickname.Visibility = Visibility.Visible;
             btnOKMod1.Visibility = Visibility.Visible;
-            txtInserimentoUtente1.Visibility = Visibility.Visible;
             txtInserimentoIP.Visibility = Visibility.Visible;
             txtInserimentoPorta.Visibility = Visibility.Visible;
             btnCreaSocket.Visibility = Visibility.Visible;
@@ -391,7 +369,6 @@ namespace Progetto_TRIS_WPF
             txtInserimentoPorta.Visibility = Visibility.Hidden;
             tbkRichiestaNickname.Visibility = Visibility.Hidden;
             btnOKMod1.Visibility = Visibility.Hidden;
-            txtInserimentoUtente1.Visibility = Visibility.Hidden;
         }
         private void AbilitaGriglia()
         {
@@ -486,8 +463,8 @@ namespace Progetto_TRIS_WPF
         public async void SocketReceive(object socketsource)
         {
             IPEndPoint ipendp = (IPEndPoint)socketsource;
-            Socket t = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            t.Bind(ipendp);
+            connessione = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            connessione.Bind(ipendp);
             Byte[] byteRicevuti = new Byte[256];
             string messaggio;
             int nBytes = 0;
@@ -495,10 +472,10 @@ namespace Progetto_TRIS_WPF
             {
                 while (true)
                 {
-                    if (t.Available > 0)
+                    if (connessione.Available > 0)
                     {
                         messaggio = string.Empty;
-                        nBytes = t.Receive(byteRicevuti, byteRicevuti.Length, 0);
+                        nBytes = connessione.Receive(byteRicevuti, byteRicevuti.Length, 0);
                         messaggio += Encoding.ASCII.GetString(byteRicevuti, 0, nBytes);
                         this.Dispatcher.BeginInvoke(new Action(() =>
                         {
@@ -555,18 +532,15 @@ namespace Progetto_TRIS_WPF
                     turno = 1;
             }
             //invio iniziale del segno
-            else if(messaggio == "X" || messaggio == "O")
+            else if (messaggio == "X" || messaggio == "O")
             {
                 if (messaggio == "O")
                     segno = "X";
                 else if (messaggio == "X")
                     segno = "O";
             }
-            //invio iniziale del nome utente
-            else
-            {
-                utente2 = messaggio;
-            }
+            else if (messaggio == "Richiesta connessione")
+                connesso = true;
         }
     } 
 }
