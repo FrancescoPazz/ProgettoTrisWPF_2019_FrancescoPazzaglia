@@ -27,17 +27,16 @@ namespace Progetto_TRIS_WPF
         //VARIABILI
         //
         string utente1, utente2;
-        bool ok1, ok2;
         Button[] bottoniGriglia = new Button[9];
-        static int cont = -1;
+        bool pareggio = false;
         int turno = 0;
+        string segno = string.Empty;
         Random rnd = new Random();
         string[] coloriGriglia = { "Default", "Giallo", "Verde", "Arancione", "Rosa" };
         public MainWindow()
         {
             InitializeComponent();
-            rtbnSceltaPartenzaUtente1.IsChecked = false;
-            rtbnSceltaPartenzaUtente2.IsChecked = false;
+            AssegnaBottoniGriglia();
             for (int i = 0; i < coloriGriglia.Length; i++)
             {
                 cmbSceltaColoreGriglia.Items.Add(coloriGriglia[i]);
@@ -54,30 +53,6 @@ namespace Progetto_TRIS_WPF
             btnIndietro.Visibility = Visibility.Visible;
             btnIndietro.IsEnabled = true;
         }
-        //
-        //CONTROLLO MODALITA
-        //
-        private void txtInserimentoUtente1_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(txtInserimentoUtente1.Text))
-                ok1 = true;
-            else
-                ok1 = false;
-        }
-        private void txtInserimentoUtente2_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(txtInserimentoUtente2.Text))
-                ok2 = true;
-            else
-                ok2 = false;
-        }
-
-        //
-        //FINE CONTROLLO MODALITA
-        //
-        //
-        //EVENTI
-        //
         private void btnGriglia_Click(object sender, RoutedEventArgs e)
         {
             txtTurni.Text = "";
@@ -140,22 +115,30 @@ namespace Progetto_TRIS_WPF
                         break;
                     }
             }
-            assegnaBottoniGriglia();
+            AssegnaBottoniGriglia();
             SocketSend(IPAddress.Parse(ipAddress), port, InviaCampoDiGioco());
+            DisabilitaGriglia();
+            txtTurni.Text = $"E' il turno dell'avversario";
         }
         private void txtInserimentoIP_GotFocus(object sender, RoutedEventArgs e)
         {
-            txtInserimentoIP.Text = string.Empty;
-            txtInserimentoIP.FontSize = 31;
+            if(txtInserimentoIP.Text == "Inserire IP dell'altro giocatore")
+            {
+                txtInserimentoIP.Text = string.Empty;
+                txtInserimentoIP.FontSize = 32;
+            }
         }
         private void txtInserimentoPorta_GotFocus(object sender, RoutedEventArgs e)
         {
-            txtInserimentoPorta.Text = string.Empty;
-            txtInserimentoPorta.FontSize = 31;
+            if(txtInserimentoPorta.Text == "Inserire la porta dell'altro giocatore")
+            {
+                txtInserimentoPorta.Text = string.Empty;
+                txtInserimentoPorta.FontSize = 32;
+            }
         }
         private void txtInserimentoIPePorta_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if(txtInserimentoIP != null && txtInserimentoPorta != null && btnCreaSocket != null)
+            if (txtInserimentoIP != null && txtInserimentoPorta != null && btnCreaSocket != null)
             {
                 string ipAddress = txtInserimentoIP.Text;
                 string port = txtInserimentoPorta.Text;
@@ -183,48 +166,56 @@ namespace Progetto_TRIS_WPF
             IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
             Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
             receive.Start(sourceSocket);
-            if (ok1 && ok2)
-                btnOKMod1.IsEnabled = true;
-            else
-                btnOKMod1.IsEnabled = false;
+            btnOKMod1.IsEnabled = true;
+            btnCreaSocket.IsEnabled = false;
+            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), utente1);
+            if (turno == 0)
+            {
+                turno = SceltaTurno();
+                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), turno.ToString());
+                segno = SceltaSegno();
+                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), segno.ToString());
+            }
         }
         //
         //BOTTONI FUNZIONALI
         //
         private void btnOKMod1_Click(object sender, RoutedEventArgs e)
         {
-            utente1 = txtInserimentoUtente1.Text;
-            utente2 = txtInserimentoUtente2.Text;
-            turno = SceltaTurno();
+            if (turno == 1)
+            {
+                txtTurni.Text = $"Sei stato sorteggiato per primo!";
+                AbilitaGriglia();
+            }
+            else
+            {
+                txtTurni.Text = $"L'avversario stato sorteggiato per primo!";
+                DisabilitaGriglia();
+            }
             ScomparsaMod1();
             RendiVisibileGriglia();
         }
         private void btnIndietro_Click(object sender, RoutedEventArgs e)
         {
-            txtInserimentoUtente1.Text = "Utente1";
-            txtInserimentoUtente2.Text = "Utente2";
             txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
             txtInserimentoIP.FontSize = 17;
             txtInserimentoPorta.Text = "Inserire la porta dell'altro giocatore";
             txtInserimentoPorta.FontSize = 17;
-            rtbnSceltaPartenzaUtente1.IsChecked = false;
-            rtbnSceltaPartenzaUtente2.IsChecked = false;
             ScomparsaGriglia();
             SvuotaGriglia();
             ScomparsaMod1();
             AbilitaGriglia();
             txtTurni.Text = "";
             RendiVisibileMenu();
-            cont = -1;
             pareggio = false;
+            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), InviaCampoDiGioco());
         }
         private void btnReset_Click(object sender, RoutedEventArgs e)
         {
             SvuotaGriglia();
             AbilitaGriglia();
-            cont = -1;
             pareggio = false;
-            turno = SceltaTurno();
+            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), InviaCampoDiGioco());
         }
         private void cmbSceltaColoreGriglia_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -265,16 +256,16 @@ namespace Progetto_TRIS_WPF
             string messaggio = string.Empty;
             for (int i = 0; i < bottoniGriglia.Length; i++)
             {
-                if(bottoniGriglia[i] != null)
+                if (bottoniGriglia[i] != null)
                     if (bottoniGriglia[i].Content == null)
                         messaggio += "null,";
                     else
                         messaggio += bottoniGriglia[i].Content + ",";
             }
-            messaggio += turno;
+            messaggio += $"{turno},{segno}";
             return messaggio;
         }
-        private void assegnaBottoniGriglia()
+        private void AssegnaBottoniGriglia()
         {
             bottoniGriglia[0] = btn1mat;
             bottoniGriglia[1] = btn2mat;
@@ -363,16 +354,9 @@ namespace Progetto_TRIS_WPF
         {
             tbkRichiestaNickname.Visibility = Visibility.Visible;
             btnOKMod1.Visibility = Visibility.Visible;
-            txtInserimentoUtente1.Visibility = Visibility.Visible;
             txtInserimentoIP.Visibility = Visibility.Visible;
             txtInserimentoPorta.Visibility = Visibility.Visible;
             btnCreaSocket.Visibility = Visibility.Visible;
-            txtInserimentoUtente2.Visibility = Visibility.Visible;
-            txtSceltaSegnoO.Visibility = Visibility.Visible;
-            txtSceltaSegnoX.Visibility = Visibility.Visible;
-            txtPartenza.Visibility = Visibility.Visible;
-            rtbnSceltaPartenzaUtente1.Visibility = Visibility.Visible;
-            rtbnSceltaPartenzaUtente2.Visibility = Visibility.Visible;
         }
         private void ScomparsaMod1()
         {
@@ -381,25 +365,13 @@ namespace Progetto_TRIS_WPF
             txtInserimentoPorta.Visibility = Visibility.Hidden;
             tbkRichiestaNickname.Visibility = Visibility.Hidden;
             btnOKMod1.Visibility = Visibility.Hidden;
-            txtInserimentoUtente1.Visibility = Visibility.Hidden;
-            txtInserimentoUtente2.Visibility = Visibility.Hidden;
-            txtSceltaSegnoO.Visibility = Visibility.Hidden;
-            txtSceltaSegnoX.Visibility = Visibility.Hidden;
-            txtPartenza.Visibility = Visibility.Hidden;
-            rtbnSceltaPartenzaUtente1.Visibility = Visibility.Hidden;
-            rtbnSceltaPartenzaUtente2.Visibility = Visibility.Hidden;
         }
         private void AbilitaGriglia()
         {
-            btn1mat.IsHitTestVisible = true;
-            btn2mat.IsHitTestVisible = true;
-            btn3mat.IsHitTestVisible = true;
-            btn4mat.IsHitTestVisible = true;
-            btn5mat.IsHitTestVisible = true;
-            btn6mat.IsHitTestVisible = true;
-            btn7mat.IsHitTestVisible = true;
-            btn8mat.IsHitTestVisible = true;
-            btn9mat.IsHitTestVisible = true;
+            for (int i = 0; i < bottoniGriglia.Length; i++)
+                if (bottoniGriglia[i] != null)
+                    if (bottoniGriglia[i].Content == null)
+                        bottoniGriglia[i].IsHitTestVisible = true;
         }
         private void DisabilitaGriglia()
         {
@@ -418,46 +390,32 @@ namespace Progetto_TRIS_WPF
         //
         private void InserimentoSegniConTurni(object sender)
         {
-            if (turno == 1)
+            if (segno == "X")
             {
-                txtTurni.Text = $"{utente2} è il tuo turno!";
                 ((Button)sender).Foreground = new SolidColorBrush(Colors.Red);
                 ((Button)sender).Content = "X";
-                turno = 2;
             }
-            else
+            else if (segno == "O")
             {
-                txtTurni.Text = $"{utente1} è il tuo turno!";
                 ((Button)sender).Foreground = new SolidColorBrush(Colors.Blue);
                 ((Button)sender).Content = "O";
-                turno = 1;
             }
             ((Button)sender).IsHitTestVisible = false;
         }
         private int SceltaTurno()
         {
-            if (rtbnSceltaPartenzaUtente1.IsChecked == false && rtbnSceltaPartenzaUtente2.IsChecked == false)
+            return rnd.Next(1, 3);
+        }
+        private string SceltaSegno()
+        {
+            int n = rnd.Next(1, 3);
+            if (n == 1)
             {
-                turno = rnd.Next(1, 3);
-                if (turno == 1)
-                    txtTurni.Text = $"{utente1} sei stato sorteggiato per primo";
-                else if (turno == 2)
-                    txtTurni.Text = $"{utente2} sei stato sorteggiato per primo";
-            }
-            else
+                return "X";
+            } else
             {
-                if (rtbnSceltaPartenzaUtente1.IsChecked == true)
-                {
-                    turno = 1;
-                    txtTurni.Text = $"{utente1} il primo turno è il tuo";
-                }
-                else if (rtbnSceltaPartenzaUtente2.IsChecked == true)
-                {
-                    turno = 2;
-                    txtTurni.Text = $"{utente2} il primo turno è il tuo";
-                }
+                return "O";
             }
-            return turno;
         }
         private bool TrovaTris(string segno)
         {
@@ -478,7 +436,6 @@ namespace Progetto_TRIS_WPF
             }
             return false;
         }
-        bool pareggio = false;
         private void ControlloPareggio()
         {
             if (btn1mat.Content != null && btn2mat.Content != null && btn3mat.Content != null && btn4mat.Content != null && btn5mat.Content != null && btn6mat.Content != null && btn7mat.Content != null && btn8mat.Content != null && btn9mat.Content != null)
@@ -491,10 +448,10 @@ namespace Progetto_TRIS_WPF
         {
             if (TrovaTris((string)((Button)sender).Content))
             {
-                if ((string)((Button)sender).Content == "X")
-                    txtTurni.Text = $"{utente1} HAI VINTOOO";
+                if (segno == "X")
+                    txtTurni.Text = $"Hai vinto!";
                 else
-                    txtTurni.Text = $"{utente2} HAI VINTOOO";
+                    txtTurni.Text = $"L'avversario ha vinto";
             }
             else
                 ControlloPareggio();
@@ -518,7 +475,7 @@ namespace Progetto_TRIS_WPF
                         messaggio += Encoding.ASCII.GetString(byteRicevuti, 0, nBytes);
                         this.Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            AggiornaGriglia(messaggio);
+                            AggiornaGrigliaOrName(messaggio);
                         }));
 
                     }
@@ -532,15 +489,57 @@ namespace Progetto_TRIS_WPF
             IPEndPoint remote_endpoint = new IPEndPoint(destination, destinationPort);
             s.SendTo(bytesended, remote_endpoint);
         }
-        public void AggiornaGriglia(string messaggio)
+        public void AggiornaGrigliaOrName(string messaggio)
         {
-            string[] griglia = messaggio.Split(',');
-            for (int i = 0; i < bottoniGriglia.Length; i++)
+            //Invio tabella di gioco
+            if (messaggio.Contains(','))
             {
-                if (griglia[i] != "null" || int.TryParse(griglia[i], out int n))
-                    bottoniGriglia[i].Content = griglia[i];
+                string[] griglia = messaggio.Split(',');
+                for (int i = 0; i < bottoniGriglia.Length; i++)
+                {
+                    if (griglia[i] != "null" || int.TryParse(griglia[i], out int n))
+                    {
+                        bottoniGriglia[i].Content = griglia[i];
+                        if (griglia[i] == "X")
+                            bottoniGriglia[i].Foreground = new SolidColorBrush(Colors.Red);
+                        else if (griglia[i] == "O")
+                            bottoniGriglia[i].Foreground = new SolidColorBrush(Colors.Blue);
+                        bottoniGriglia[i].IsHitTestVisible = false;
+                    }
+                }
+                if (int.Parse(griglia[griglia.Length - 2]) != turno)
+                {
+                    AbilitaGriglia();
+                    txtTurni.Text = "E' il tuo turno";
+                }
+                else
+                    DisabilitaGriglia();
+                if (TrovaTris(segno))
+                    txtTurni.Text = $"Hai vinto!";
+                else
+                    ControlloPareggio();
             }
-            turno = int.Parse(griglia[griglia.Length - 1]);
+            //invio iniziale numero del turno
+            else if (int.TryParse(messaggio, out int n) && (messaggio == "1" || messaggio == "2"))
+            {
+                if (int.Parse(messaggio) == 1)
+                    turno = 2;
+                else if (int.Parse(messaggio) == 2)
+                    turno = 1;
+            }
+            //invio iniziale del segno
+            else if(messaggio == "X" || messaggio == "O")
+            {
+                if (messaggio == "O")
+                    segno = "X";
+                else if (messaggio == "X")
+                    segno = "O";
+            }
+            //invio iniziale del nome utente
+            else
+            {
+                utente2 = messaggio;
+            }
         }
-    }
+    } 
 }
