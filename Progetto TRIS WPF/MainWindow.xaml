@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Progetto_TRIS_WPF"
         mc:Ignorable="d"
-        Title="TRIS" Height="800" Width="800" Background="LightGreen">
+        Title="TRIS" Height="800" Width="800" Background="LightGreen" Closing="Window_Closing">
     <Window.Resources>
         <Style x:Key="btnSceltaModalità" TargetType="Button">
             <Setter Property="Background" Value="Cornsilk"/>
@@ -57,7 +57,7 @@
         <Button x:Name="btn8mat" Grid.Column="1" Grid.Row="2" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
         <Button x:Name="btn9mat" Grid.Column="2" Grid.Row="2" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
         <Button x:Name="btnIndietro" Margin="3" Grid.Column="2" Grid.Row="3" BorderBrush="Black" BorderThickness="2" Background="Honeydew" FontSize="23" Content="Chiudi connessione" Visibility="Hidden" Click="btnIndietro_Click" />
-        <Button x:Name="btnReset" Margin="3" Grid.Column="0" Grid.Row="3" BorderBrush="Black" BorderThickness="2" Background="Honeydew" FontSize="24" Content="Rinizia partita" Visibility="Hidden" Click="btnReset_Click" />
+        <Button x:Name="btnReset" Margin="3" Grid.Column="0" Grid.Row="3" BorderBrush="Black" BorderThickness="2" Background="Honeydew" FontSize="24" Content="Rinizia partita" Visibility="Hidden" IsEnabled="False" Click="btnReset_Click" />
         <TextBlock x:Name="txtTurni" Grid.Row="3" Grid.Column="1" Visibility="Hidden" FontSize="15" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center"/>
     </Grid>
 </Window>

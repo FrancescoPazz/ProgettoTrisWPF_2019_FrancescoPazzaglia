@@ -173,6 +173,14 @@ namespace Progetto_TRIS_WPF
             btnCreaSocket.IsEnabled = false;
             fineConnessione = false;
         }
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            MessageBoxResult risultato = MessageBox.Show("Sicuro di voler chiudere la finestra?", "ATTENZIONE", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (risultato == MessageBoxResult.Yes)
+                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
+            else if(risultato == MessageBoxResult.No)
+                e.Cancel = true;
+        }
         //
         //BOTTONI FUNZIONALI
         //
@@ -225,10 +233,26 @@ namespace Progetto_TRIS_WPF
         }
         private void btnReset_Click(object sender, RoutedEventArgs e)
         {
-            SvuotaGriglia();
-            AbilitaGriglia();
-            pareggio = false;
-            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), InviaCampoDiGioco());
+            if (MessageBox.Show("Riniziare la partita?", "AVVISO", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                SvuotaGriglia();
+                AbilitaGriglia();
+                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RST");
+                pareggio = false;
+                if (turno == 1)
+                {
+                    txtTurni.Text = $"Sei stato sorteggiato per primo!";
+                    AbilitaGriglia();
+                }
+                else
+                {
+                    txtTurni.Text = $"L'avversario stato sorteggiato per primo!";
+                    DisabilitaGriglia();
+                }
+                ScomparsaMod1();
+                RendiVisibileGriglia();
+                btnReset.IsEnabled = false;
+            }
         }
         private void cmbSceltaColoreGriglia_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -456,6 +480,7 @@ namespace Progetto_TRIS_WPF
             {
                 txtTurni.Text = "PAREGGIO";
                 pareggio = true;
+                btnReset.IsEnabled = true;
             }
         }
         private void GiocateMod1(object sender)
@@ -466,6 +491,7 @@ namespace Progetto_TRIS_WPF
                     txtTurni.Text = $"Hai vinto!";
                 else
                     txtTurni.Text = $"Hai perso!";
+                btnReset.IsEnabled = true;
             }
             else if (TrovaTris("O"))
             {
@@ -473,6 +499,7 @@ namespace Progetto_TRIS_WPF
                     txtTurni.Text = $"Hai vinto!";
                 else
                     txtTurni.Text = $"Hai perso!";
+                btnReset.IsEnabled = true;
             }
             else
                 ControlloPareggio();
@@ -536,6 +563,7 @@ namespace Progetto_TRIS_WPF
                         txtTurni.Text = $"Hai vinto!";
                     else
                         txtTurni.Text = $"Hai perso!";
+                    btnReset.IsEnabled = true;
                 }
                 else if (TrovaTris("O"))
                 {
@@ -543,9 +571,12 @@ namespace Progetto_TRIS_WPF
                         txtTurni.Text = $"Hai vinto!";
                     else
                         txtTurni.Text = $"Hai perso!";
+                    btnReset.IsEnabled = true;
                 }
                 else
+                {
                     ControlloPareggio();
+                }
             }
             //Sincronizzazione iniziale del turno e del segno, tramite dei messaggi di riscontro.
             else if (messaggio.Contains("RQCN"))
@@ -617,6 +648,25 @@ namespace Progetto_TRIS_WPF
                 pareggio = false;
                 btnCreaSocket.IsEnabled = false;
                 btnOKMod1.IsEnabled = false;
+            }
+            else if (messaggio == "RST")
+            {
+                SvuotaGriglia();
+                AbilitaGriglia();
+                pareggio = false;
+                if (turno == 1)
+                {
+                    txtTurni.Text = $"Sei stato sorteggiato per primo!";
+                    AbilitaGriglia();
+                }
+                else
+                {
+                    txtTurni.Text = $"L'avversario stato sorteggiato per primo!";
+                    DisabilitaGriglia();
+                }
+                ScomparsaMod1();
+                RendiVisibileGriglia();
+                btnReset.IsEnabled = false;
             }
         }
     }
