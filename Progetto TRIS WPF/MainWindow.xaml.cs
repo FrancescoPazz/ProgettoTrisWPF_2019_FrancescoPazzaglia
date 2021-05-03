@@ -35,6 +35,7 @@ namespace Progetto_TRIS_WPF
         string[] coloriGriglia = { "Default", "Giallo", "Verde", "Arancione", "Rosa" };
         Socket connessione;
         bool connesso = false;
+        bool fineConnessione = false;
         public MainWindow()
         {
             InitializeComponent();
@@ -127,7 +128,7 @@ namespace Progetto_TRIS_WPF
             if (txtInserimentoIP.Text == "Inserire IP dell'altro giocatore")
             {
                 txtInserimentoIP.Text = string.Empty;
-                txtInserimentoIP.FontSize = 32;
+                txtInserimentoIP.FontSize = 34;
             }
         }
         private void txtInserimentoPorta_GotFocus(object sender, RoutedEventArgs e)
@@ -135,7 +136,7 @@ namespace Progetto_TRIS_WPF
             if (txtInserimentoPorta.Text == "Inserire la porta dell'altro giocatore")
             {
                 txtInserimentoPorta.Text = string.Empty;
-                txtInserimentoPorta.FontSize = 32;
+                txtInserimentoPorta.FontSize = 34;
             }
         }
         private void txtInserimentoIPePorta_TextChanged(object sender, TextChangedEventArgs e)
@@ -168,26 +169,9 @@ namespace Progetto_TRIS_WPF
             IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
             Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
             receive.Start(sourceSocket);
-            if(cont == 0)
-                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
-            if (turno == 0)
-            {
-                if(cont == 1)
-                {
-                    turno = SceltaTurno();
-                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), turno.ToString());
-                }
-                if(cont == 2)
-                {
-                    segno = SceltaSegno();
-                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), segno.ToString());
-                }
-            }
-            if (connesso)
-                btnOKMod1.IsEnabled = true;
-            else
-                btnOKMod1.IsEnabled = false;
+            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
             btnCreaSocket.IsEnabled = false;
+            fineConnessione = false;
         }
         //
         //BOTTONI FUNZIONALI
@@ -209,31 +193,35 @@ namespace Progetto_TRIS_WPF
         }
         private void btnIndietro_Click(object sender, RoutedEventArgs e)
         {
-            int countDot = 0;
-            for (int i = 0; i < txtInserimentoIP.Text.Length; i++)
+            if(MessageBox.Show("Sicuro di voler chiudere la connessione?", "ATTENZIONE", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                if (txtInserimentoIP.Text[i] == '.')
-                    countDot++;
+                fineConnessione = true;
+                int countDot = 0;
+                for (int i = 0; i < txtInserimentoIP.Text.Length; i++)
+                {
+                    if (txtInserimentoIP.Text[i] == '.')
+                        countDot++;
+                }
+                if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
+                {
+                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
+                    connessione.Shutdown(SocketShutdown.Both);
+                    connessione.Close();
+                }
+                txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
+                txtInserimentoIP.FontSize = 17;
+                txtInserimentoPorta.Text = "Inserire la porta dell'altro giocatore";
+                txtInserimentoPorta.FontSize = 17;
+                ScomparsaGriglia();
+                SvuotaGriglia();
+                ScomparsaMod1();
+                AbilitaGriglia();
+                txtTurni.Text = "";
+                RendiVisibileMenu();
+                pareggio = false;
+                btnCreaSocket.IsEnabled = false;
+                btnOKMod1.IsEnabled = false;
             }
-            if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
-            {
-                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
-                connessione.Shutdown(SocketShutdown.Both);
-                connessione.Close();
-            }
-            txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
-            txtInserimentoIP.FontSize = 17;
-            txtInserimentoPorta.Text = "Inserire la porta dell'altro giocatore";
-            txtInserimentoPorta.FontSize = 17;
-            ScomparsaGriglia();
-            SvuotaGriglia();
-            ScomparsaMod1();
-            AbilitaGriglia();
-            txtTurni.Text = "";
-            RendiVisibileMenu();
-            pareggio = false;
-            btnCreaSocket.IsEnabled = true;
-            btnOKMod1.IsEnabled = false;
         }
         private void btnReset_Click(object sender, RoutedEventArgs e)
         {
@@ -499,7 +487,7 @@ namespace Progetto_TRIS_WPF
             int nBytes = 0;
             await Task.Run(() =>
             {
-                while (true)
+                while (!fineConnessione)
                 {
                     if (connessione.Available > 0)
                     {
@@ -559,24 +547,7 @@ namespace Progetto_TRIS_WPF
                 else
                     ControlloPareggio();
             }
-            //invio iniziale numero del turno
-            else if (int.TryParse(messaggio, out int n) && (messaggio == "1" || messaggio == "2"))
-            {
-                if (int.Parse(messaggio) == 1)
-                    turno = 2;
-                else if (int.Parse(messaggio) == 2)
-                    turno = 1;
-                cont++;
-            }
-            //invio iniziale del segno
-            else if (messaggio == "X" || messaggio == "O")
-            {
-                if (messaggio == "O")
-                    segno = "X";
-                else if (messaggio == "X")
-                    segno = "O";
-                cont++;
-            }
+            //Sincronizzazione iniziale del turno e del segno, tramite dei messaggi di riscontro.
             else if (messaggio.Contains("RQCN"))
             {
                 if (!connesso || cont <= 3)
@@ -614,11 +585,13 @@ namespace Progetto_TRIS_WPF
                 {
                     btnOKMod1.IsEnabled = true;
                     btnCreaSocket.IsEnabled = false;
+                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
                 }
                 cont++;
             }
             else if (messaggio == "TRMN")
             {
+                fineConnessione = true;
                 int countDot = 0;
                 for (int i = 0; i < txtInserimentoIP.Text.Length; i++)
                 {
@@ -642,7 +615,7 @@ namespace Progetto_TRIS_WPF
                 txtTurni.Text = "";
                 RendiVisibileMenu();
                 pareggio = false;
-                btnCreaSocket.IsEnabled = true;
+                btnCreaSocket.IsEnabled = false;
                 btnOKMod1.IsEnabled = false;
             }
         }
