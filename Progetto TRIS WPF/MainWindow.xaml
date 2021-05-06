@@ -46,6 +46,7 @@
         <TextBox x:Name="txtInserimentoIP" Text="Inserire IP dell'altro giocatore" Grid.Row="0" Grid.Column="0" Visibility="Hidden" Width="225" Height="50" FontSize="17" TextWrapping="Wrap" GotFocus="txtInserimentoIP_GotFocus" TextChanged="txtInserimentoIPePorta_TextChanged"></TextBox>
         <TextBox x:Name="txtInserimentoPorta" Text="Inserire la porta dell'altro giocatore" Visibility="Hidden" Grid.Row="0" Grid.Column="1" Width="225" Height="50" FontSize="17" TextWrapping="Wrap" GotFocus="txtInserimentoPorta_GotFocus" TextChanged="txtInserimentoIPePorta_TextChanged"></TextBox>
         <Button x:Name="btnCreaSocket" Content="Crea Socket" Grid.Row="0" Grid.Column="2" Visibility="Hidden" IsEnabled="False" Style="{DynamicResource ResourceKey=btnSceltaModalità}" Height="50" Width="75" Click="btnCreaSocket_Click"></Button>
+        <TextBlock x:Name="tbkAttesa" Visibility="Hidden" FontSize="30" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" TextAlignment="Center" Text="In attesa dell'avversario. . ."></TextBlock>
         <!--Griglia-->
         <Button x:Name="btn1mat" Grid.Column="0" Grid.Row="0" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
         <Button x:Name="btn2mat" Grid.Column="1" Grid.Row="0" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
@@ -56,7 +57,7 @@
         <Button x:Name="btn7mat" Grid.Column="0" Grid.Row="2" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
         <Button x:Name="btn8mat" Grid.Column="1" Grid.Row="2" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
         <Button x:Name="btn9mat" Grid.Column="2" Grid.Row="2" Style="{DynamicResource ResourceKey=btnGriglia}" Click="btnGriglia_Click"/>
-        <Button x:Name="btnIndietro" Margin="3" Grid.Column="2" Grid.Row="3" BorderBrush="Black" BorderThickness="2" Background="Honeydew" FontSize="23" Content="Chiudi connessione" Visibility="Hidden" Click="btnIndietro_Click" />
+        <Button x:Name="btnIndietro" Margin="3" Grid.Column="2" Grid.Row="3" BorderBrush="Black" BorderThickness="2" Background="Honeydew" FontSize="19" Content="Torna al menù e chiudi socket" Visibility="Hidden" Click="btnIndietro_Click" />
         <Button x:Name="btnReset" Margin="3" Grid.Column="0" Grid.Row="3" BorderBrush="Black" BorderThickness="2" Background="Honeydew" FontSize="24" Content="Rinizia partita" Visibility="Hidden" IsEnabled="False" Click="btnReset_Click" />
         <TextBlock x:Name="txtTurni" Grid.Row="3" Grid.Column="1" Visibility="Hidden" FontSize="15" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center"/>
     </Grid>

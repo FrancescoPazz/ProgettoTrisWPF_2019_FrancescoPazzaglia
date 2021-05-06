@@ -53,6 +53,7 @@ namespace Progetto_TRIS_WPF
         {
             ScomparsaMenu();
             RendiVisibileMod1();
+            btnIndietro.Content = "Torna al menù iniziale";
             btnIndietro.Visibility = Visibility.Visible;
             btnIndietro.IsEnabled = true;
         }
@@ -159,6 +160,7 @@ namespace Progetto_TRIS_WPF
         }
         private void btnCreaSocket_Click(object sender, RoutedEventArgs e)
         {
+            //metodo che prende indirizzo locale della macchina
             string localIP;
             using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
             {
@@ -166,6 +168,7 @@ namespace Progetto_TRIS_WPF
                 IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
                 localIP = endPoint.Address.ToString();
             }
+            //Inserisco l'indirizzo locale per fare automaticamente il collegamento.
             IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
             Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
             receive.Start(sourceSocket);
@@ -176,8 +179,11 @@ namespace Progetto_TRIS_WPF
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             MessageBoxResult risultato = MessageBox.Show("Sicuro di voler chiudere la finestra?", "ATTENZIONE", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (risultato == MessageBoxResult.Yes)
+            if (risultato == MessageBoxResult.Yes && connesso)
+            {
                 SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
+                connesso = false;
+            }
             else if(risultato == MessageBoxResult.No)
                 e.Cancel = true;
         }
@@ -186,18 +192,10 @@ namespace Progetto_TRIS_WPF
         //
         private void btnOKMod1_Click(object sender, RoutedEventArgs e)
         {
-            if (turno == 1)
-            {
-                txtTurni.Text = $"Sei stato sorteggiato per primo!";
-                AbilitaGriglia();
-            }
-            else
-            {
-                txtTurni.Text = $"L'avversario stato sorteggiato per primo!";
-                DisabilitaGriglia();
-            }
-            ScomparsaMod1();
-            RendiVisibileGriglia();
+            cont = 0;
+            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQOK");
+            tbkAttesa.Visibility = Visibility.Visible;
+            btnOKMod1.IsEnabled = false;
         }
         private void btnIndietro_Click(object sender, RoutedEventArgs e)
         {
@@ -229,6 +227,7 @@ namespace Progetto_TRIS_WPF
                 pareggio = false;
                 btnCreaSocket.IsEnabled = false;
                 btnOKMod1.IsEnabled = false;
+                tbkAttesa.Text = string.Empty;
             }
         }
         private void btnReset_Click(object sender, RoutedEventArgs e)
@@ -667,6 +666,28 @@ namespace Progetto_TRIS_WPF
                 ScomparsaMod1();
                 RendiVisibileGriglia();
                 btnReset.IsEnabled = false;
+            }
+            else if(messaggio == "RQOK")
+            {
+                if(cont == 0)
+                {
+                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQOK");
+                    if (turno == 1)
+                    {
+                        txtTurni.Text = $"Sei stato sorteggiato per primo!";
+                        AbilitaGriglia();
+                    }
+                    else
+                    {
+                        txtTurni.Text = $"L'avversario stato sorteggiato per primo!";
+                        DisabilitaGriglia();
+                    }
+                    ScomparsaMod1();
+                    RendiVisibileGriglia();
+                    btnIndietro.Content = "Torna al menù e chiudi socket";
+                    tbkAttesa.Visibility = Visibility.Hidden;
+                    cont++;
+                }
             }
         }
     }
