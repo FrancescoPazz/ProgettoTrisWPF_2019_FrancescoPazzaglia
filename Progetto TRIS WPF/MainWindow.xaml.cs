@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Threading;
 using System.Net.Sockets;
 using System.Net;
+using System.IO;
 
 namespace Progetto_TRIS_WPF
 {
@@ -38,6 +39,8 @@ namespace Progetto_TRIS_WPF
         bool fineConnessione = false;
         NetworkStream stream;
         TcpClient client;
+        StreamReader ascolta;
+        string rispostaServer = string.Empty;
         public MainWindow()
         {
             InitializeComponent();
@@ -58,12 +61,16 @@ namespace Progetto_TRIS_WPF
             btnIndietro.Content = "Torna al menù iniziale";
             btnIndietro.Visibility = Visibility.Visible;
             btnIndietro.IsEnabled = true;
+            client = new TcpClient("127.0.0.1", 56000);
+            stream = client.GetStream();
+            Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
+            receive.Start();
+            Invia("RQCN");
+            fineConnessione = false;
         }
         private void btnGriglia_Click(object sender, RoutedEventArgs e)
         {
             txtTurni.Text = "";
-            string ipAddress = txtInserimentoIP.Text;
-            int port = int.Parse(txtInserimentoPorta.Text);
             txtTurni.Text = $"E' il turno dell'avversario";
             switch (((Button)sender).Name.Substring(3, 1))
             {
@@ -123,68 +130,15 @@ namespace Progetto_TRIS_WPF
                     }
             }
             AssegnaBottoniGriglia();
-            SocketSend(IPAddress.Parse(ipAddress), port, InviaCampoDiGioco());
+            Invia(InviaCampoDiGioco());
             DisabilitaGriglia();
-        }
-        private void txtInserimentoIP_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (txtInserimentoIP.Text == "Inserire IP dell'altro giocatore")
-            {
-                txtInserimentoIP.Text = string.Empty;
-                txtInserimentoIP.FontSize = 34;
-            }
-        }
-        private void txtInserimentoPorta_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (txtInserimentoPorta.Text == "Inserire la porta dell'altro giocatore")
-            {
-                txtInserimentoPorta.Text = string.Empty;
-                txtInserimentoPorta.FontSize = 34;
-            }
-        }
-        private void txtInserimentoIPePorta_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (txtInserimentoIP != null && txtInserimentoPorta != null && btnCreaSocket != null)
-            {
-                string ipAddress = txtInserimentoIP.Text;
-                string port = txtInserimentoPorta.Text;
-                int countDot = 0;
-                for (int i = 0; i < ipAddress.Length; i++)
-                {
-                    if (ipAddress[i] == '.')
-                        countDot++;
-                }
-                if (!string.IsNullOrEmpty(ipAddress) && !string.IsNullOrEmpty(port) && int.TryParse(port, out int n) && countDot == 3)
-                    btnCreaSocket.IsEnabled = true;
-                else
-                    btnCreaSocket.IsEnabled = false;
-            }
-        }
-        private void btnCreaSocket_Click(object sender, RoutedEventArgs e)
-         {
-            string localIP;
-            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-            {
-                socket.Connect("8.8.8.8", 65530);
-                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-                localIP = endPoint.Address.ToString();
-            }
-            //Inserisco l'indirizzo locale per fare automaticamente il collegamento.
-            client = new TcpClient(localIP, 56000);
-            stream = client.GetStream();
-            //metodo che prende indirizzo locale della macchina
-            //Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
-            //receive.Start(sourceSocket);
-            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
-            btnCreaSocket.IsEnabled = false;
-            fineConnessione = false;
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             MessageBoxResult risultato = MessageBox.Show("Sicuro di voler chiudere la finestra?", "ATTENZIONE", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (risultato == MessageBoxResult.Yes && connesso)
             {
-                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
+                Invia("TRMN");
                 connesso = false;
             }
             else if(risultato == MessageBoxResult.No)
@@ -196,8 +150,9 @@ namespace Progetto_TRIS_WPF
         private void btnOKMod1_Click(object sender, RoutedEventArgs e)
         {
             cont = 0;
-            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQOK");
+            Invia("RQOK");
             tbkAttesa.Visibility = Visibility.Visible;
+            tbkAttesa.Text = "In attesa dell'avversario. . .";
             btnOKMod1.IsEnabled = false;
         }
         private void btnIndietro_Click(object sender, RoutedEventArgs e)
@@ -205,30 +160,16 @@ namespace Progetto_TRIS_WPF
             if(MessageBox.Show("Sicuro di voler chiudere la connessione?", "ATTENZIONE", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
                 fineConnessione = true;
-                int countDot = 0;
-                for (int i = 0; i < txtInserimentoIP.Text.Length; i++)
-                {
-                    if (txtInserimentoIP.Text[i] == '.')
-                        countDot++;
-                }
-                if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
-                {
-                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
-                    stream.Close();
-                    client.Close();
-                }
-                txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
-                txtInserimentoIP.FontSize = 17;
-                txtInserimentoPorta.Text = "Inserire la porta dell'altro giocatore";
-                txtInserimentoPorta.FontSize = 17;
+                Invia("TRMN");
+                stream.Close();
+                client.Close();
                 ScomparsaGriglia();
                 SvuotaGriglia();
                 ScomparsaMod1();
                 AbilitaGriglia();
-                txtTurni.Text = "";
+                txtTurni.Text = string.Empty;
                 RendiVisibileMenu();
                 pareggio = false;
-                btnCreaSocket.IsEnabled = false;
                 btnOKMod1.IsEnabled = false;
                 tbkAttesa.Text = string.Empty;
             }
@@ -239,7 +180,7 @@ namespace Progetto_TRIS_WPF
             {
                 SvuotaGriglia();
                 AbilitaGriglia();
-                SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RST");
+                Invia("RST");
                 pareggio = false;
                 if (turno == 1)
                 {
@@ -391,18 +332,12 @@ namespace Progetto_TRIS_WPF
         }
         private void RendiVisibileMod1()
         {
-            tbkRichiestaNickname.Visibility = Visibility.Visible;
+            tbkAttesa.Visibility = Visibility.Visible;
             btnOKMod1.Visibility = Visibility.Visible;
-            txtInserimentoIP.Visibility = Visibility.Visible;
-            txtInserimentoPorta.Visibility = Visibility.Visible;
-            btnCreaSocket.Visibility = Visibility.Visible;
         }
         private void ScomparsaMod1()
         {
-            btnCreaSocket.Visibility = Visibility.Hidden;
-            txtInserimentoIP.Visibility = Visibility.Hidden;
-            txtInserimentoPorta.Visibility = Visibility.Hidden;
-            tbkRichiestaNickname.Visibility = Visibility.Hidden;
+            tbkAttesa.Visibility = Visibility.Hidden;
             btnOKMod1.Visibility = Visibility.Hidden;
         }
         private void AbilitaGriglia()
@@ -506,39 +441,30 @@ namespace Progetto_TRIS_WPF
             else
                 ControlloPareggio();
         }
-        public async void SocketReceive(object socketsource)
+        public async void SocketReceive(object p)
         {
-            IPEndPoint ipendp = (IPEndPoint)socketsource;
-            connessione = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Tcp);
-            connessione.Bind(ipendp);
             Byte[] byteRicevuti = new Byte[256];
-            string messaggio;
-            int nBytes = 0;
+            ascolta = new StreamReader(stream);
             await Task.Run(() =>
             {
                 while (!fineConnessione)
                 {
-                    if (connessione.Available > 0)
+                    if (stream.DataAvailable)
                     {
-
-                        messaggio = string.Empty;
-                        nBytes = stream.Read(byteRicevuti, 0, byteRicevuti.Length);
-                        messaggio += Encoding.ASCII.GetString(byteRicevuti, 0, nBytes);
+                        rispostaServer = ascolta.ReadLine();
                         this.Dispatcher.BeginInvoke(new Action(() =>
                         {
-                            AggiornaGrigliaOrName(messaggio);
+                            AggiornaGrigliaOrName(rispostaServer);
                         }));
                     }
                 }
             });
         }
-        public void SocketSend(IPAddress destination, int destinationPort, string message)
+        public void Invia(string message)
         {
             Byte[] bytesended = Encoding.ASCII.GetBytes(message);
-            Socket s = new Socket(destination.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            stream = client.GetStream();
             stream.Write(bytesended, 0, bytesended.Length);
-            IPEndPoint server = new IPEndPoint(destination, destinationPort);
-            s.SendTo(bytesended, server);
         }
         public void AggiornaGrigliaOrName(string messaggio)
         {
@@ -588,16 +514,16 @@ namespace Progetto_TRIS_WPF
                 {
                     connesso = true;
                     if (cont == 0)
-                        SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
+                        Invia("RQCN");
                     if (cont == 1)
                     {
                         turno = SceltaTurno();
-                        SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), turno.ToString()+"RQCN");
+                        Invia(turno.ToString()+"RQCN");
                     }
                     if (cont == 2)
                     {
                         segno = SceltaSegno();
-                        SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), segno.ToString()+"RQCN");
+                        Invia(segno.ToString()+"RQCN");
                         if(int.TryParse(messaggio[0].ToString(), out int s))
                         {
                             if (int.Parse(messaggio[0].ToString()) == 1)
@@ -612,36 +538,22 @@ namespace Progetto_TRIS_WPF
                             segno = "X";
                         else if (messaggio[0] == 'X')
                             segno = "O";
-                        SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
+                        Invia("RQCN");
                     }
                 }
                 if (cont == 4)
                 {
                     btnOKMod1.IsEnabled = true;
-                    btnCreaSocket.IsEnabled = false;
-                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
+                    Invia("RQCN");
                 }
                 cont++;
             }
             else if (messaggio == "TRMN")
             {
                 fineConnessione = true;
-                int countDot = 0;
-                for (int i = 0; i < txtInserimentoIP.Text.Length; i++)
-                {
-                    if (txtInserimentoIP.Text[i] == '.')
-                        countDot++;
-                }
-                if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
-                {
-                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
-                    connessione.Shutdown(SocketShutdown.Both);
-                    connessione.Close();
-                }
-                txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
-                txtInserimentoIP.FontSize = 17;
-                txtInserimentoPorta.Text = "Inserire la porta dell'altro giocatore";
-                txtInserimentoPorta.FontSize = 17;
+                Invia("TRMN");
+                stream.Close();
+                client.Close();
                 ScomparsaGriglia();
                 SvuotaGriglia();
                 ScomparsaMod1();
@@ -649,8 +561,8 @@ namespace Progetto_TRIS_WPF
                 txtTurni.Text = "";
                 RendiVisibileMenu();
                 pareggio = false;
-                btnCreaSocket.IsEnabled = false;
                 btnOKMod1.IsEnabled = false;
+                tbkAttesa.Text = string.Empty;
             }
             else if (messaggio == "RST")
             {
@@ -675,7 +587,7 @@ namespace Progetto_TRIS_WPF
             {
                 if(cont == 0)
                 {
-                    SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQOK");
+                    Invia("RQOK");
                     if (turno == 1)
                     {
                         txtTurni.Text = $"Sei stato sorteggiato per primo!";

@@ -13,63 +13,41 @@ namespace ServerTCP
     {
         public static void Main()
         {
-            TcpListener server = null;
-            try
+            TcpListener ascoltatore = new TcpListener(IPAddress.Any, 56000);
+            string richiesta = string.Empty;
+            ascoltatore.Start();
+            while (true)
             {
-                string localIP;
-                using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+                Console.WriteLine("In attesa di una connessione... ");
+                TcpClient client = ascoltatore.AcceptTcpClient();
+                Console.WriteLine("Connesso!");
+                NetworkStream stream = client.GetStream();
+                StreamReader leggi = new StreamReader(client.GetStream());
+                StreamWriter scrivi = new StreamWriter(client.GetStream());
+                try
                 {
-                    socket.Connect("8.8.8.8", 65530);
-                    IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-                    localIP = endPoint.Address.ToString();
-                }
-                int port = 56000;
-                server = new TcpListener(IPAddress.Parse(localIP), port);
-                server.Start();
-                Byte[] bytes = new Byte[256];
-                String data = null;
-                while (true)
-                {
-                    Console.Write("In attesa di una connessione... ");
-                    TcpClient client = server.AcceptTcpClient();
-                    TcpClient client2 = server.AcceptTcpClient();
-                    Console.WriteLine("Connesso!");
-
-                    data = null;
-                    NetworkStream stream = client.GetStream();
-
-                    int i;
-
-                    // Loop to receive all the data sent by the client.
-                    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                    while (true)
                     {
-                        // Translate data bytes to a ASCII string.
-                        data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                        Console.WriteLine("Ricevuto: {0}", data);
-
-                        // Process the data sent by the client.
-                        data = data.ToUpper();
-
-                        byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
-
-                        // Send back a response.
-                        stream.Write(msg, 0, msg.Length);
-                        Console.WriteLine("Inviato: {0}", data);
+                        byte[] buffer = new byte[256];
+                        stream.Read(buffer, 0, buffer.Length);
+                        int cont = 0;
+                        foreach (byte b in buffer)
+                            if (b != 0)
+                                cont++;
+                        richiesta = Encoding.ASCII.GetString(buffer, 0, cont);
+                        Console.WriteLine("Richiesta ricevuta: " + richiesta);
+                        scrivi.WriteLine("RQCN");
+                        scrivi.Flush();
                     }
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine("Qualcosa è andato storto");
+                }
 
                     // Shutdown and end connection
+                if(richiesta == "TRMN")
                     client.Close();
-                    client2.Close();
-                }
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine("SocketException: {0}", e);
-            }
-            finally
-            {
-                // Stop listening for new clients.
-                server.Stop();
             }
 
             Console.WriteLine("\nPremi un tasto qualsiasi per continuare...");
