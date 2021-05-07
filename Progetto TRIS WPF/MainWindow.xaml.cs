@@ -36,6 +36,8 @@ namespace Progetto_TRIS_WPF
         Socket connessione;
         bool connesso = false;
         bool fineConnessione = false;
+        NetworkStream stream;
+        TcpClient client;
         public MainWindow()
         {
             InitializeComponent();
@@ -159,22 +161,25 @@ namespace Progetto_TRIS_WPF
             }
         }
         private void btnCreaSocket_Click(object sender, RoutedEventArgs e)
-        {
-            //metodo che prende indirizzo locale della macchina
-            string localIP;
-            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-            {
-                socket.Connect("8.8.8.8", 65530);
-                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-                localIP = endPoint.Address.ToString();
-            }
-            //Inserisco l'indirizzo locale per fare automaticamente il collegamento.
-            IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
-            Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
-            receive.Start(sourceSocket);
-            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
-            btnCreaSocket.IsEnabled = false;
-            fineConnessione = false;
+         {
+            int port = 56000;
+            client = new TcpClient("172.0.0.1", port);
+            stream = client.GetStream();
+            ////metodo che prende indirizzo locale della macchina
+            //string localIP;
+            //using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            //{
+            //    socket.Connect("8.8.8.8", 65530);
+            //    IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+            //    localIP = endPoint.Address.ToString();
+            //}
+            ////Inserisco l'indirizzo locale per fare automaticamente il collegamento.
+            //IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
+            //Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
+            //receive.Start(sourceSocket);
+            //SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
+            //btnCreaSocket.IsEnabled = false;
+            //fineConnessione = false;
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -211,8 +216,8 @@ namespace Progetto_TRIS_WPF
                 if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
                 {
                     SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
-                    connessione.Shutdown(SocketShutdown.Both);
-                    connessione.Close();
+                    stream.Close();
+                    client.Close();
                 }
                 txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
                 txtInserimentoIP.FontSize = 17;
@@ -517,8 +522,9 @@ namespace Progetto_TRIS_WPF
                 {
                     if (connessione.Available > 0)
                     {
+
                         messaggio = string.Empty;
-                        nBytes = connessione.Receive(byteRicevuti, byteRicevuti.Length, 0);
+                        nBytes = stream.Read(byteRicevuti, 0, byteRicevuti.Length);
                         messaggio += Encoding.ASCII.GetString(byteRicevuti, 0, nBytes);
                         this.Dispatcher.BeginInvoke(new Action(() =>
                         {
@@ -532,9 +538,8 @@ namespace Progetto_TRIS_WPF
         public void SocketSend(IPAddress destination, int destinationPort, string message)
         {
             Byte[] bytesended = Encoding.ASCII.GetBytes(message);
-            Socket s = new Socket(destination.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            IPEndPoint remote_endpoint = new IPEndPoint(destination, destinationPort);
-            s.SendTo(bytesended, remote_endpoint);
+            stream.Write(bytesended, 0, bytesended.Length);
+            bytesended = new Byte[256];
         }
         public void AggiornaGrigliaOrName(string messaggio)
         {
