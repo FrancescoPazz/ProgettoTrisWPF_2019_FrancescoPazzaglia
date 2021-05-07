@@ -211,8 +211,8 @@ namespace Progetto_TRIS_WPF
                 if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
                 {
                     SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
-                    connessione.Shutdown(SocketShutdown.Both);
-                    connessione.Close();
+                    //connessione.Shutdown(SocketShutdown.Both);
+                    //connessione.Close();
                 }
                 txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
                 txtInserimentoIP.FontSize = 17;
@@ -503,11 +503,16 @@ namespace Progetto_TRIS_WPF
             else
                 ControlloPareggio();
         }
+        int contBind = 0;
         public async void SocketReceive(object socketsource)
         {
             IPEndPoint ipendp = (IPEndPoint)socketsource;
-            connessione = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            connessione.Bind(ipendp);
+            if(contBind == 0)
+            {
+                connessione = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                connessione.Bind(ipendp);
+                contBind++;
+            }
             Byte[] byteRicevuti = new Byte[256];
             string messaggio;
             int nBytes = 0;
@@ -524,7 +529,6 @@ namespace Progetto_TRIS_WPF
                         {
                             AggiornaGrigliaOrName(messaggio);
                         }));
-
                     }
                 }
             });
@@ -631,8 +635,8 @@ namespace Progetto_TRIS_WPF
                 if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
                 {
                     SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
-                    connessione.Shutdown(SocketShutdown.Both);
-                    connessione.Close();
+                    //connessione.Shutdown(SocketShutdown.Both);
+                    //connessione.Close();
                 }
                 txtInserimentoIP.Text = "Inserire IP dell'altro giocatore";
                 txtInserimentoIP.FontSize = 17;
