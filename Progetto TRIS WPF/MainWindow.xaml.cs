@@ -162,19 +162,17 @@ namespace Progetto_TRIS_WPF
         }
         private void btnCreaSocket_Click(object sender, RoutedEventArgs e)
          {
-            int port = 56000;
-            client = new TcpClient("172.0.0.1", port);
+            string localIP;
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            {
+                socket.Connect("8.8.8.8", 65530);
+                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+                localIP = endPoint.Address.ToString();
+            }
+            //Inserisco l'indirizzo locale per fare automaticamente il collegamento.
+            client = new TcpClient(localIP, 56000);
             stream = client.GetStream();
-            ////metodo che prende indirizzo locale della macchina
-            //string localIP;
-            //using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-            //{
-            //    socket.Connect("8.8.8.8", 65530);
-            //    IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-            //    localIP = endPoint.Address.ToString();
-            //}
-            ////Inserisco l'indirizzo locale per fare automaticamente il collegamento.
-            //IPEndPoint sourceSocket = new IPEndPoint(IPAddress.Parse(localIP), 56000);
+            //metodo che prende indirizzo locale della macchina
             //Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
             //receive.Start(sourceSocket);
             //SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
@@ -511,7 +509,7 @@ namespace Progetto_TRIS_WPF
         public async void SocketReceive(object socketsource)
         {
             IPEndPoint ipendp = (IPEndPoint)socketsource;
-            connessione = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            connessione = new Socket(ipendp.AddressFamily, SocketType.Dgram, ProtocolType.Tcp);
             connessione.Bind(ipendp);
             Byte[] byteRicevuti = new Byte[256];
             string messaggio;
@@ -538,8 +536,10 @@ namespace Progetto_TRIS_WPF
         public void SocketSend(IPAddress destination, int destinationPort, string message)
         {
             Byte[] bytesended = Encoding.ASCII.GetBytes(message);
+            Socket s = new Socket(destination.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             stream.Write(bytesended, 0, bytesended.Length);
-            bytesended = new Byte[256];
+            IPEndPoint server = new IPEndPoint(destination, destinationPort);
+            s.SendTo(bytesended, server);
         }
         public void AggiornaGrigliaOrName(string messaggio)
         {
