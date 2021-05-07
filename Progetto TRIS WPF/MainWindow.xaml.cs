@@ -175,9 +175,9 @@ namespace Progetto_TRIS_WPF
             //metodo che prende indirizzo locale della macchina
             //Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
             //receive.Start(sourceSocket);
-            //SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
-            //btnCreaSocket.IsEnabled = false;
-            //fineConnessione = false;
+            SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
+            btnCreaSocket.IsEnabled = false;
+            fineConnessione = false;
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -528,7 +528,6 @@ namespace Progetto_TRIS_WPF
                         {
                             AggiornaGrigliaOrName(messaggio);
                         }));
-
                     }
                 }
             });

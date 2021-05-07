@@ -16,9 +16,15 @@ namespace ServerTCP
             TcpListener server = null;
             try
             {
+                string localIP;
+                using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+                {
+                    socket.Connect("8.8.8.8", 65530);
+                    IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+                    localIP = endPoint.Address.ToString();
+                }
                 int port = 56000;
-                IPAddress localAddress = IPAddress.Parse("127.0.0.1");
-                server = new TcpListener(localAddress, port);
+                server = new TcpListener(IPAddress.Parse(localIP), port);
                 server.Start();
                 Byte[] bytes = new Byte[256];
                 String data = null;
