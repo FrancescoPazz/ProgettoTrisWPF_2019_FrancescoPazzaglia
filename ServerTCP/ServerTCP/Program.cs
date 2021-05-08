@@ -20,33 +20,29 @@ namespace ServerTCP
             {
                 Console.WriteLine("In attesa di una connessione... ");
                 TcpClient client = ascoltatore.AcceptTcpClient();
+                TcpClient client2 = ascoltatore.AcceptTcpClient();
                 Console.WriteLine("Connesso!");
                 NetworkStream stream = client.GetStream();
                 StreamReader leggi = new StreamReader(client.GetStream());
                 StreamWriter scrivi = new StreamWriter(client.GetStream());
                 try
                 {
-                    while (true)
-                    {
-                        byte[] buffer = new byte[256];
-                        stream.Read(buffer, 0, buffer.Length);
-                        int cont = 0;
-                        foreach (byte b in buffer)
-                            if (b != 0)
-                                cont++;
-                        richiesta = Encoding.ASCII.GetString(buffer, 0, cont);
-                        Console.WriteLine("Richiesta ricevuta: " + richiesta);
-                        scrivi.WriteLine("RQCN");
-                        scrivi.Flush();
-                    }
+                    byte[] buffer = new byte[256];
+                    stream.Read(buffer, 0, buffer.Length);
+                    int cont = 0;
+                    foreach (byte b in buffer)
+                        if (b != 0)
+                            cont++;
+                    richiesta = Encoding.ASCII.GetString(buffer, 0, cont);
+                    Console.WriteLine("Richiesta ricevuta: " + richiesta);
+                    scrivi.WriteLine(richiesta);
+                    scrivi.Flush();
                 }
-                catch(Exception e)
+                catch
                 {
                     Console.WriteLine("Qualcosa è andato storto");
                 }
-
-                    // Shutdown and end connection
-                if(richiesta == "TRMN")
+                if (richiesta == "TRMN")
                     client.Close();
             }
 

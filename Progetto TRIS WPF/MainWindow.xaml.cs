@@ -61,6 +61,7 @@ namespace Progetto_TRIS_WPF
             btnIndietro.Content = "Torna al menù iniziale";
             btnIndietro.Visibility = Visibility.Visible;
             btnIndietro.IsEnabled = true;
+            //qui inserisco l'indirizzo IP della macchina che farà da server.
             client = new TcpClient("127.0.0.1", 56000);
             stream = client.GetStream();
             Thread receive = new Thread(new ParameterizedThreadStart(SocketReceive));
@@ -447,21 +448,19 @@ namespace Progetto_TRIS_WPF
             ascolta = new StreamReader(stream);
             await Task.Run(() =>
             {
-                while (!fineConnessione)
+                while (true)
                 {
-                    if (stream.DataAvailable)
+                    rispostaServer = ascolta.ReadLine();
+                    this.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        rispostaServer = ascolta.ReadLine();
-                        this.Dispatcher.BeginInvoke(new Action(() =>
-                        {
-                            AggiornaGrigliaOrName(rispostaServer);
-                        }));
-                    }
+                        AggiornaGrigliaOrName(rispostaServer);
+                    }));
                 }
             });
         }
         public void Invia(string message)
         {
+            client.GetStream();
             Byte[] bytesended = Encoding.ASCII.GetBytes(message);
             stream = client.GetStream();
             stream.Write(bytesended, 0, bytesended.Length);
