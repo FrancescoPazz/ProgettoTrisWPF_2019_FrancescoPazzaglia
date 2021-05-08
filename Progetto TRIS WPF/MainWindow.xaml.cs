@@ -29,13 +29,14 @@ namespace Progetto_TRIS_WPF
         Button[] bottoniGriglia = new Button[9];
         bool pareggio = false;
         int turno = 0;
-        int cont = 0;
+        int cont = -1;
         string segno = string.Empty;
         Random rnd = new Random();
         string[] coloriGriglia = { "Default", "Giallo", "Verde", "Arancione", "Rosa" };
         Socket connessione;
         bool connesso = false;
         bool fineConnessione = false;
+        List<string> listaIndirizziIP = new List<string>();
         public MainWindow()
         {
             InitializeComponent();
@@ -44,7 +45,7 @@ namespace Progetto_TRIS_WPF
             {
                 cmbSceltaColoreGriglia.Items.Add(coloriGriglia[i]);
             }
-            tbkTestoModalita.Text = "Puntare il mouse sopra di un bottone delle tre modalità per scoprire come funzionano!";
+            tbkTestoModalita.Text = "Gioco del TRIS con comunicazione tramite UDP!";
         }
         //
         //INIZIO CON SCELTA MODALITA'
@@ -56,6 +57,8 @@ namespace Progetto_TRIS_WPF
             btnIndietro.Content = "Torna al menù iniziale";
             btnIndietro.Visibility = Visibility.Visible;
             btnIndietro.IsEnabled = true;
+            txtInserimentoIP.IsEnabled = true;
+            txtInserimentoPorta.IsEnabled = true;
         }
         private void btnGriglia_Click(object sender, RoutedEventArgs e)
         {
@@ -140,19 +143,27 @@ namespace Progetto_TRIS_WPF
                 txtInserimentoPorta.FontSize = 34;
             }
         }
+        bool ipGiaScelto = false;
         private void txtInserimentoIPePorta_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (txtInserimentoIP != null && txtInserimentoPorta != null && btnCreaSocket != null)
             {
-                string ipAddress = txtInserimentoIP.Text;
-                string port = txtInserimentoPorta.Text;
-                int countDot = 0;
-                for (int i = 0; i < ipAddress.Length; i++)
+                for (int i = 0; i < listaIndirizziIP.Count; i++)
                 {
-                    if (ipAddress[i] == '.')
-                        countDot++;
+                    if (txtInserimentoIP.Text == listaIndirizziIP[i])
+                    {
+                        tbkAttesa.Visibility = Visibility.Visible;
+                        tbkAttesa.Text = "Indirizzo IP già utilizzato in precedenza";
+                        ipGiaScelto = true;
+                        break;
+                    }
+                    else
+                    {
+                        tbkAttesa.Visibility = Visibility.Hidden;
+                        ipGiaScelto = false;
+                    }
                 }
-                if (!string.IsNullOrEmpty(ipAddress) && !string.IsNullOrEmpty(port) && int.TryParse(port, out int n) && countDot == 3)
+                if (IPAddress.TryParse(txtInserimentoIP.Text, out IPAddress s) && int.TryParse(txtInserimentoPorta.Text, out int n) && !ipGiaScelto)
                     btnCreaSocket.IsEnabled = true;
                 else
                     btnCreaSocket.IsEnabled = false;
@@ -160,6 +171,7 @@ namespace Progetto_TRIS_WPF
         }
         private void btnCreaSocket_Click(object sender, RoutedEventArgs e)
         {
+            cont = 0;
             //metodo che prende indirizzo locale della macchina
             string localIP;
             using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
@@ -175,6 +187,10 @@ namespace Progetto_TRIS_WPF
             SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQCN");
             btnCreaSocket.IsEnabled = false;
             fineConnessione = false;
+            cont = 0;
+            txtInserimentoIP.IsEnabled = false;
+            txtInserimentoPorta.IsEnabled = false;
+            listaIndirizziIP.Add(txtInserimentoIP.Text);
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -195,20 +211,18 @@ namespace Progetto_TRIS_WPF
             cont = 0;
             SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "RQOK");
             tbkAttesa.Visibility = Visibility.Visible;
+            tbkAttesa.Text = "In attesa dell'avversario. . .";
             btnOKMod1.IsEnabled = false;
         }
         private void btnIndietro_Click(object sender, RoutedEventArgs e)
         {
-            if(MessageBox.Show("Sicuro di voler chiudere la connessione?", "ATTENZIONE", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            string messaggio = "Sicuro di voler chiudere la connessione?\n\rSuccessivamente non potrai più connetterti allo stesso indirizzo IP";
+            if (cont == -1)
+                messaggio = "Sicuro di voler tornare al menu?";
+            if (MessageBox.Show(messaggio, "ATTENZIONE", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
                 fineConnessione = true;
-                int countDot = 0;
-                for (int i = 0; i < txtInserimentoIP.Text.Length; i++)
-                {
-                    if (txtInserimentoIP.Text[i] == '.')
-                        countDot++;
-                }
-                if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
+                if (IPAddress.TryParse(txtInserimentoIP.Text, out IPAddress s) && int.TryParse(txtInserimentoPorta.Text, out int n))
                 {
                     SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
                     //connessione.Shutdown(SocketShutdown.Both);
@@ -228,6 +242,7 @@ namespace Progetto_TRIS_WPF
                 btnCreaSocket.IsEnabled = false;
                 btnOKMod1.IsEnabled = false;
                 tbkAttesa.Text = string.Empty;
+                cont = -1;
             }
         }
         private void btnReset_Click(object sender, RoutedEventArgs e)
@@ -626,13 +641,7 @@ namespace Progetto_TRIS_WPF
             else if (messaggio == "TRMN")
             {
                 fineConnessione = true;
-                int countDot = 0;
-                for (int i = 0; i < txtInserimentoIP.Text.Length; i++)
-                {
-                    if (txtInserimentoIP.Text[i] == '.')
-                        countDot++;
-                }
-                if (!string.IsNullOrEmpty(txtInserimentoIP.Text) && !string.IsNullOrEmpty(txtInserimentoPorta.Text) && int.TryParse(txtInserimentoPorta.Text, out int g) && countDot == 3)
+                if (IPAddress.TryParse(txtInserimentoIP.Text, out IPAddress s) && int.TryParse(txtInserimentoPorta.Text, out int n))
                 {
                     SocketSend(IPAddress.Parse(txtInserimentoIP.Text), int.Parse(txtInserimentoPorta.Text), "TRMN");
                     //connessione.Shutdown(SocketShutdown.Both);
